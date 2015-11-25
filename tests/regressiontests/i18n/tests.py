@@ -684,6 +684,10 @@ class FormattingTests(TestCase):
                 self.assertEqual(template2.render(context), output2)
                 self.assertEqual(template3.render(context), output3)
 
+    def test_format_arbitrary_settings(self):
+        self.assertEqual(get_format('DEBUG'), 'DEBUG')
+
+
 class MiscTests(TestCase):
 
     def setUp(self):
