@@ -1,0 +1,11 @@
+Django 1.4.25 release notes
+===========================
+
+*July 6, 2016*
+
+Django 1.4.25 fixes one issue in 1.4.24.
+
+Transfered back a fix from Django 1.6 to avoid a maximum recursion depth exeception when tracing LazyObject.__init__
+====================================================================================================================
+
+See https://code.djangoproject.com/ticket/19456 for the details of the issue.
