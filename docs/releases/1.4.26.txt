@@ -1,0 +1,11 @@
+Django 1.4.26 release notes
+===========================
+
+*September 22, 2016*
+
+Django 1.4.26 fixes one issue in 1.4.25.
+
+Transfered back a fix from Django 1.8 to avoid the usage of innerHTML where textConent is sufficient in debug view
+====================================================================================================================
+
+See https://github.com/django/django/commit/f68e5a99164867ab0e071a936470958ed867479d for the details of the issue.
