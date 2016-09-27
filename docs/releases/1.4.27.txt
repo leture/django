@@ -1,0 +1,20 @@
+===========================
+Django 1.4.27 release notes
+===========================
+
+*September 27, 2016*
+
+Django 1.4.27 fixes a security issue in 1.4.26.
+
+CSRF protection bypass on a site with Google Analytics
+======================================================
+
+An interaction between Google Analytics and Django's cookie parsing could allow
+an attacker to set arbitrary cookies leading to a bypass of CSRF protection.
+
+The parser for ``request.COOKIES`` is simplified to better match the behavior
+of browsers and to mitigate this attack. ``request.COOKIES`` may now contain
+cookies that are invalid according to :rfc:`6265` but are possible to set via
+``document.cookie``.
+
+Fix was backported from Django 1.8.15, see https://github.com/django/django/commit/6118ab7d0676f0d622278e5be215f14fb5410b6a

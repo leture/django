@@ -12,7 +12,7 @@ from django.conf import settings
 from django.core.handlers.modpython import ModPythonRequest
 from django.core.exceptions import SuspiciousOperation
 from django.core.handlers.wsgi import WSGIRequest, LimitedStream
-from django.http import HttpRequest, HttpResponse, parse_cookie, build_request_repr, UnreadablePostError
+from django.http import HttpRequest, HttpResponse, build_request_repr, UnreadablePostError
 from django.test import TransactionTestCase
 from django.test.utils import get_warnings_state, restore_warnings_state, override_settings
 from django.utils import unittest
@@ -95,9 +95,6 @@ class RequestsTests(unittest.TestCase):
         self.assertEqual(build_request_repr(request), repr(request))
         self.assertEqual(build_request_repr(request, path_override='/otherpath/', GET_override={u'a': u'b'}, POST_override={u'c': u'd'}, COOKIES_override={u'e': u'f'}, META_override={u'g': u'h'}),
                          u"<ModPythonRequest\npath:/otherpath/,\nGET:{u'a': u'b'},\nPOST:{u'c': u'd'},\nCOOKIES:{u'e': u'f'},\nMETA:{u'g': u'h'}>")
-
-    def test_parse_cookie(self):
-        self.assertEqual(parse_cookie('invalid:key=true'), {})
 
     def test_httprequest_location(self):
         request = HttpRequest()

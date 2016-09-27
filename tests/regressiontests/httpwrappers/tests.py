@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import copy
 import pickle
 
@@ -6,7 +7,9 @@ from django.http import (QueryDict, HttpResponse, HttpResponseRedirect,
                          HttpResponsePermanentRedirect,
                          SimpleCookie, BadHeaderError,
                          parse_cookie)
+from django.utils import six
 from django.utils import unittest
+from django.utils.encoding import smart_bytes
 
 
 class QueryDictTests(unittest.TestCase):
@@ -330,6 +333,8 @@ class CookieTests(unittest.TestCase):
         c2 = SimpleCookie()
         c2.load(c.output())
         self.assertEqual(c['test'].value, c2['test'].value)
+        c3 = parse_cookie(c.output()[12:])
+        self.assertEqual(c['test'].value, c3['test'])
 
     def test_decode_2(self):
         """
@@ -340,6 +345,8 @@ class CookieTests(unittest.TestCase):
         c2 = SimpleCookie()
         c2.load(c.output())
         self.assertEqual(c['test'].value, c2['test'].value)
+        c3 = parse_cookie(c.output()[12:])
+        self.assertEqual(c['test'].value, c3['test'])
 
     def test_nonstandard_keys(self):
         """
@@ -352,6 +359,56 @@ class CookieTests(unittest.TestCase):
         Test that a repeated non-standard name doesn't affect all cookies. Ticket #15852
         """
         self.assertTrue('good_cookie' in parse_cookie('a,=b; a,=c; good_cookie=yes').keys())
+
+    def test_python_cookies(self):
+        """
+        Test cases copied from Python's Lib/test/test_http_cookies.py
+        """
+        self.assertEqual(parse_cookie(u'chips=ahoy; vienna=finger'), {u'chips': u'ahoy', u'vienna': u'finger'})
+        # Here parse_cookie() differs from Python's cookie parsing in that it
+        # treats all semicolons as delimiters, even within quotes.
+        self.assertEqual(
+            parse_cookie(u'keebler="E=mc2; L=\\"Loves\\"; fudge=\\012;"'),
+            {u'keebler': u'"E=mc2', u'L': u'\\"Loves\\"', u'fudge': u'\\012', u'': u'"'}
+        )
+        # Illegal cookies that have an '=' char in an unquoted value.
+        self.assertEqual(parse_cookie(u'keebler=E=mc2'), {u'keebler': u'E=mc2'})
+        # Cookies with ':' character in their name.
+        self.assertEqual(parse_cookie(u'key:term=value:term'), {u'key:term': u'value:term'})
+        # Cookies with '[' and ']'.
+        self.assertEqual(parse_cookie(u'a=b; c=[; d=r; f=h'), {u'a': u'b', u'c': u'[', u'd': u'r', u'f': u'h'})
+
+    def test_cookie_edgecases(self):
+        # Cookies that RFC6265 allows.
+        self.assertEqual(parse_cookie(u'a=b; Domain=example.com'), {u'a': u'b', u'Domain': u'example.com'})
+        # parse_cookie() has historically kept only the last cookie with the
+        # same name.
+        self.assertEqual(parse_cookie(u'a=b; h=i; a=c'), {u'a': u'c', u'h': u'i'})
+
+    def test_invalid_cookies(self):
+        """
+        Cookie strings that go against RFC6265 but browsers will send if set
+        via document.cookie.
+        """
+        # Chunks without an equals sign appear as unnamed values per
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=169091
+        self.assertIn(u'django_language', parse_cookie(u'abc=def; unnamed; django_language=en').keys())
+        # Even a double quote may be an unamed value.
+        self.assertEqual(parse_cookie(u'a=b; "; c=d'), {u'a': u'b', '': u'"', u'c': u'd'})
+        # Spaces in names and values, and an equals sign in values.
+        self.assertEqual(parse_cookie(u'a b c=d e = f; gh=i'), {u'a b c': u'd e = f', u'gh': u'i'})
+        # More characters the spec forbids.
+        self.assertEqual(parse_cookie(u'a   b,c<>@:/[]?{}=d  "  =e,f g'), {u'a   b,c<>@:/[]?{}': u'd  "  =e,f g'})
+        # Unicode characters. The spec only allows ASCII.
+        if six.PY2:
+            correct_value = smart_bytes(u'André Bessette')
+        else:
+            correct_value = u'André Bessette'
+        self.assertEqual(parse_cookie(u'saint=André Bessette'), {u'saint': correct_value})
+        # Browsers don't send extra whitespace or semicolons in Cookie headers,
+        # but parse_cookie() should parse whitespace the same way
+        # document.cookie parses whitespace.
+        self.assertEqual(parse_cookie(u'  =  b  ;  ;  =  ;   c  =  ;  '), {u'': u'b', u'c': ''})
 
     def test_httponly_after_load(self):
         """
