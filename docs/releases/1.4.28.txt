@@ -1,0 +1,20 @@
+===========================
+Django 1.4.28 release notes
+===========================
+
+*December 12, 2016*
+
+Django 1.4.28 fixes an issue in 1.4.27.
+
+CSRF protection bypass on a site with Google Analytics
+======================================================
+
+``django.views.decorators.cache.never_cache()`` now sends more persuasive
+headers (added ``no-cache, no-store, must-revalidate`` to ``Cache-Control``)
+to better prevent caching (:ticket:`13008`). This fixes a problem where a
+page refresh in Firefox cleared the selected entries in the admin's
+``filter_horizontal`` and ``filter_vertical`` widgets, which could result
+in inadvertent data loss if a user didn't notice that and then submitted the
+form (:ticket:`22955`).
+
+Fix was backported from Django 1.8.8, see https://github.com/django/django/commit/b51086d57313e7ea857f4b96b62d25e600ee0a8d
