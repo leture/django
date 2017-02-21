@@ -219,7 +219,10 @@ class HttpRequest(object):
             if server_port != (self.is_secure() and '443' or '80'):
                 host = '%s:%s' % (host, server_port)
 
-        allowed_hosts = ['*'] if settings.DEBUG else settings.ALLOWED_HOSTS
+        allowed_hosts = settings.ALLOWED_HOSTS
+        if settings.DEBUG and not allowed_hosts:
+            allowed_hosts = ['localhost', '127.0.0.1', '[::1]']
+
         if validate_host(host, allowed_hosts):
             return host
         else:
