@@ -1,0 +1,13 @@
+===========================
+Django 1.4.31 release notes
+===========================
+
+*December 11, 2017*
+
+Django 1.4.31 fixes one in Django 1.4.30.
+
+Adjusted regular expression for email validator
+===============================================
+
+The regular expression constrained the length of domain name labels
+too 6 characters but 63 are allowed according to appropriate RFCs.

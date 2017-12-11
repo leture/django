@@ -539,6 +539,7 @@ class FieldsTests(SimpleTestCase):
         self.assertEqual(u'example@valid-with-hyphens.com', f.clean('example@valid-with-hyphens.com'))
         self.assertRaisesMessage(ValidationError, "[u'Enter a valid e-mail address.']", f.clean, 'example@.com')
         self.assertEqual(u'local@domain.with.idn.xyz\xe4\xf6\xfc\xdfabc.part.com', f.clean('local@domain.with.idn.xyzäöüßabc.part.com'))
+        self.assertEqual(u'example@long.domain.name.label.at.the.eeeeeeeeeeeeeeeeeeeeeeeeend', f.clean('example@long.domain.name.label.at.the.eeeeeeeeeeeeeeeeeeeeeeeeend'))
 
     def test_email_regexp_for_performance(self):
         f = EmailField()
