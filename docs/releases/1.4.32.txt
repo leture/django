@@ -1,0 +1,15 @@
+===========================
+Django 1.4.32 release notes
+===========================
+
+*March 2, 2018*
+
+Django 1.4.32 fixes one issue in Django 1.4.30.
+
+Adjusted queryset building when searching in changelist
+=======================================================
+
+The former code chained calls to filter which could end up
+in overexcessive use of JOINs in the generated SQL statement
+which in the end exhausted the server during execution and
+caused a crash.
