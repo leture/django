@@ -52,21 +52,37 @@ class TestUtilsText(unittest.TestCase):
             truncator.words(4, '[snip]'))
 
     def test_truncate_html_words(self):
-        truncator = text.Truncator('<p><strong><em>The quick brown fox jumped '
-            'over the lazy dog.</em></strong></p>')
-        self.assertEqual(u'<p><strong><em>The quick brown fox jumped over the '
-            'lazy dog.</em></strong></p>', truncator.words(10, html=True))
-        self.assertEqual(u'<p><strong><em>The quick brown fox...</em>'
-            '</strong></p>', truncator.words(4, html=True))
-        self.assertEqual(u'<p><strong><em>The quick brown fox....</em>'
-            '</strong></p>', truncator.words(4, '....', html=True))
-        self.assertEqual(u'<p><strong><em>The quick brown fox</em></strong>'
-            '</p>', truncator.words(4, '', html=True))
+        truncator = text.Truncator(u'<p id="par"><strong><em>The quick brown fox'
+                                   u' jumped over the lazy dog.</em></strong></p>')
+        self.assertEqual(u'<p id="par"><strong><em>The quick brown fox jumped over'
+                         u' the lazy dog.</em></strong></p>', truncator.words(10, html=True))
+        self.assertEqual(u'<p id="par"><strong><em>The quick brown fox...</em>'
+                         u'</strong></p>', truncator.words(4, html=True))
+        self.assertEqual(u'<p id="par"><strong><em>The quick brown fox....</em>'
+                         u'</strong></p>', truncator.words(4, '....', html=True))
+        self.assertEqual(u'<p id="par"><strong><em>The quick brown fox</em>'
+                         u'</strong></p>', truncator.words(4, '', html=True))
+
         # Test with new line inside tag
-        truncator = text.Truncator('<p>The quick <a href="xyz.html"\n'
-            'id="mylink">brown fox</a> jumped over the lazy dog.</p>')
+        truncator = text.Truncator(u'<p>The quick <a href="xyz.html"\n'
+                                   u'id="mylink">brown fox</a> jumped over the lazy dog.</p>')
         self.assertEqual(u'<p>The quick <a href="xyz.html"\n'
-            'id="mylink">brown...</a></p>', truncator.words(3, '...', html=True))
+                         u'id="mylink">brown...</a></p>', truncator.words(3, '...', html=True))
+
+        # Test self-closing tags
+        truncator = text.Truncator(u'<br/>The <hr />quick brown fox jumped over'
+                                   u' the lazy dog.')
+        self.assertEqual(u'<br/>The <hr />quick brown...',
+                         truncator.words(3, '...', html=True))
+        truncator = text.Truncator(u'<br>The <hr/>quick <em>brown fox</em> '
+                                   u'jumped over the lazy dog.')
+        self.assertEqual(u'<br>The <hr/>quick <em>brown...</em>',
+                         truncator.words(3, '...', html=True))
+
+        re_tag_catastrophic_test = (u'</a' + '\t' * 50000) + u'//>'
+        truncator = text.Truncator(re_tag_catastrophic_test)
+
+        self.assertEqual(re_tag_catastrophic_test, truncator.words(500, html=True))
 
     def test_old_truncate_words(self):
         self.assertEqual(u'The quick brown fox jumped over the lazy dog.',

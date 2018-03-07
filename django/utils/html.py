@@ -22,7 +22,6 @@ unquoted_percents_re = re.compile(r'%(?![0-9A-Fa-f]{2})')
 word_split_re = re.compile(r'(\s+)')
 simple_url_re = re.compile(r'^https?://\w')
 simple_url_2_re = re.compile(r'^www\.|^(?!http)\w[^@]+\.(com|edu|gov|int|mil|net|org)$')
-simple_email_re = re.compile(r'^\S+@\S+\.\S+$')
 link_target_attribute_re = re.compile(r'(<a [^>]*?)target=[^\s>]+')
 html_gunk_re = re.compile(r'(?:<br clear="all">|<i><\/i>|<b><\/b>|<em><\/em>|<strong><\/strong>|<\/?smallcaps>|<\/?uppercase>)', re.IGNORECASE)
 hard_coded_bullets_re = re.compile(r'((?:<p>(?:%s).*?[a-zA-Z].*?</p>\s*)+)' % '|'.join([re.escape(x) for x in DOTS]), re.DOTALL)
@@ -139,6 +138,22 @@ def urlize(text, trim_url_limit=None, nofollow=False, autoescape=False):
     """
     trim_url = lambda x, limit=trim_url_limit: limit is not None and (len(x) > limit and ('%s...' % x[:max(0, limit - 3)])) or x
     safe_input = isinstance(text, SafeData)
+
+    def is_email_simple(value):
+        """Return True if value looks like an email address."""
+        # An @ must be in the middle of the value.
+        if '@' not in value or value.startswith('@') or value.endswith('@'):
+            return False
+        try:
+            p1, p2 = value.split('@')
+        except ValueError:
+            # value contains more than one @.
+            return False
+        # Dot must be in p2 (e.g. example.com)
+        if '.' not in p2 or p2.startswith('.'):
+            return False
+        return True
+
     words = word_split_re.split(force_unicode(text))
     for i, word in enumerate(words):
         match = None
@@ -166,7 +181,7 @@ def urlize(text, trim_url_limit=None, nofollow=False, autoescape=False):
                 url = smart_urlquote(middle)
             elif simple_url_2_re.match(middle):
                 url = smart_urlquote('http://%s' % middle)
-            elif not ':' in middle and simple_email_re.match(middle):
+            elif not ':' in middle and is_email_simple(middle):
                 local, domain = middle.rsplit('@', 1)
                 try:
                     domain = domain.encode('idna')

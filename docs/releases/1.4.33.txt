@@ -1,0 +1,35 @@
+===========================
+Django 1.4.33 release notes
+===========================
+
+*March 7, 2018*
+
+Django 1.4.33 fixes two security issues in 1.4.32.
+
+CVE-2018-7536: Denial-of-service possibility in ``urlize`` and ``urlizetrunc`` template filters
+===============================================================================================
+
+The ``django.utils.html.urlize()`` function was extremely slow to evaluate
+certain inputs due to a catastrophic backtracking vulnerability in a regular
+expression. The ``urlize()`` function is used to implement the ``urlize`` and
+``urlizetrunc`` template filters, which were thus vulnerable.
+
+The problematic regular expression is replaced with parsing logic that behaves
+similarly.
+
+Fix was backported from Django 1.8.19, see https://github.com/django/django/commit/1ca63a66ef3163149ad822701273e8a1844192c2
+
+CVE-2018-7537: Denial-of-service possibility in ``truncatechars_html`` and ``truncatewords_html`` template filters
+==================================================================================================================
+
+If ``django.utils.text.Truncator``'s ``chars()`` and ``words()`` methods were
+passed the ``html=True`` argument, they were extremely slow to evaluate certain
+inputs due to a catastrophic backtracking vulnerability in a regular
+expression. The ``chars()`` and ``words()`` methods are used to implement the
+``truncatechars_html`` and ``truncatewords_html`` template filters, which were
+thus vulnerable.
+
+The backtracking problem in the regular expression is fixed.
+
+Fix was backported from Django 1.8.19, see https://github.com/django/django/commit/d17974a287a6ea2e361daff88fcc004cbd6835fa
+Also backported for easier integration of the fix: https://github.com/django/django/commit/ac4faa6dc33407c93566884e53fa5d8ef44c0a2a

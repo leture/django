@@ -133,3 +133,11 @@ class TestUtilsHtml(unittest.TestCase):
         )
         for value, output in items:
             self.check_output(f, value, output)
+
+    def test_urlize_unchanged_inputs(self):
+        tests = (
+            (u'a' + u'@a' * 50000) + u'a',  # simple_email_re catastrophic test
+            (u'a' + u'.' * 1000000) + u'a',  # trailing_punctuation catastrophic test
+        )
+        for value in tests:
+            self.assertEqual(html.urlize(value), value)
