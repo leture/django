@@ -20,7 +20,9 @@ from django.utils.datastructures import MultiValueDict
 from django.utils.deprecation import RemovedInDjango110Warning
 from django.utils.encoding import force_str, force_text, iri_to_uri
 from django.utils.functional import lazy
-from django.utils.http import RFC3986_SUBDELIMS, urlquote
+from django.utils.http import (
+    RFC3986_SUBDELIMS, escape_leading_slashes, urlquote,
+)
 from django.utils.module_loading import module_has_submodule
 from django.utils.regex_helper import normalize
 from django.utils.translation import get_language
@@ -476,9 +478,7 @@ class RegexURLResolver(LocaleRegexProvider):
                                           for (k, v) in candidate_subs.items())
                     url = candidate_pat % candidate_subs
                     # Don't allow construction of scheme relative urls.
-                    if url.startswith('//'):
-                        url = '/%%2F%s' % url[2:]
-                    return url
+                    return escape_leading_slashes(url)
         # lookup_view can be URL label, or dotted path, or callable, Any of
         # these can be passed in at the top, but callables are not friendly in
         # error messages.

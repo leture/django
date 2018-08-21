@@ -10,8 +10,9 @@ from unittest import skipIf
 from django.conf import settings
 from django.core import mail
 from django.http import (
-    FileResponse, HttpRequest, HttpResponse, HttpResponsePermanentRedirect,
-    HttpResponseRedirect, StreamingHttpResponse,
+    FileResponse, HttpRequest, HttpResponse,
+    HttpResponsePermanentRedirect, HttpResponseRedirect,
+    StreamingHttpResponse,
 )
 from django.middleware.clickjacking import XFrameOptionsMiddleware
 from django.middleware.common import (
@@ -98,6 +99,27 @@ class CommonMiddlewareTest(TestCase):
         self.assertEqual(
             r.url,
             'http://testserver/needsquoting%23/')
+
+    @override_settings(APPEND_SLASH=True)
+    def test_append_slash_leading_slashes(self):
+        """
+        Paths starting with two slashes are escaped to prevent open redirects.
+        If there's a URL pattern that allows paths to start with two slashes, a
+        request with path //evil.com must not redirect to //evil.com/ (appended
+        slash) which is a schemaless absolute URL. The browser would navigate
+        to evil.com/.
+        """
+
+        request = self.rf.get('/non-evil-com/security')
+        r = CommonMiddleware().process_request(request)
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r.url, 'http://testserver/non-evil-com/security/')
+
+        # Use 4 slashes because of RequestFactory behavior.
+        request = self.rf.get('////evil.com/security')
+        r = CommonMiddleware().process_request(request)
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r.url, 'http://testserver/%2Fevil.com/security/')
 
     @override_settings(APPEND_SLASH=False, PREPEND_WWW=True)
     def test_prepend_www(self):
