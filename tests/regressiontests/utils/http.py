@@ -125,3 +125,13 @@ class TestUtilsHttp(unittest.TestCase):
         self.assertTrue(http.is_safe_url('/confirm/me@example.com'))
         # Basic auth without host is not allowed.
         self.assertFalse(http.is_safe_url(r'http://testserver\@example.com'))
+
+
+class EscapeLeadingSlashesTests(unittest.TestCase):
+    def test(self):
+        tests = (
+            ('//example.com', '/%2Fexample.com'),
+            ('//', '/%2F'),
+        )
+        for url, expected in tests:
+            self.assertEqual(http.escape_leading_slashes(url), expected)

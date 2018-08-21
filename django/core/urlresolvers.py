@@ -14,6 +14,7 @@ from threading import local
 from django.http import Http404
 from django.core.exceptions import ImproperlyConfigured, ViewDoesNotExist
 from django.utils.datastructures import MultiValueDict
+from django.utils.http import escape_leading_slashes
 from django.utils.encoding import iri_to_uri, force_unicode, smart_str
 from django.utils.functional import memoize, lazy
 from django.utils.importlib import import_module
@@ -406,9 +407,7 @@ class RegexURLResolver(LocaleRegexProvider):
                     unicode_kwargs = dict([(k, force_unicode(v)) for (k, v) in kwargs.items()])
                     candidate = (prefix_norm + result) % unicode_kwargs
                 if re.search(u'^%s%s' % (_prefix, pattern), candidate, re.UNICODE):
-                    if candidate.startswith('//'):
-                        candidate = '/%%2F%s' % candidate[2:]
-                    return candidate
+                    return escape_leading_slashes(candidate)
         # lookup_view can be URL label, or dotted path, or callable, Any of
         # these can be passed in at the top, but callables are not friendly in
         # error messages.

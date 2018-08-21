@@ -11,7 +11,7 @@ from django.core import mail
 from django.db import (transaction, connections, DEFAULT_DB_ALIAS,
                        IntegrityError)
 from django.http import HttpRequest
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.middleware.clickjacking import XFrameOptionsMiddleware
 from django.middleware.common import CommonMiddleware
 from django.middleware.http import ConditionalGetMiddleware
@@ -118,6 +118,31 @@ class CommonMiddlewareTest(TestCase):
         self.assertEqual(
             r['Location'],
             'http://testserver/middleware/needsquoting%23/')
+
+    @override_settings(APPEND_SLASH=True)
+    def test_append_slash_leading_slashes(self):
+        """
+        Paths starting with two slashes are escaped to prevent open redirects.
+        If there's a URL pattern that allows paths to start with two slashes, a
+        request with path //evil.com must not redirect to //evil.com/ (appended
+        slash) which is a schemaless absolute URL. The browser would navigate
+        to evil.com/.
+        """
+
+        rf = RequestFactory()
+        request = rf.get('/non-evil-com/security')
+        request.urlconf = 'regressiontests.middleware.cve_2018_14574_urls'
+        r = CommonMiddleware().process_request(request)
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r['Location'], 'http://testserver/non-evil-com/security/')
+
+        # Use 4 slashes because of RequestFactory behavior.
+        rf = RequestFactory()
+        request = rf.get('////evil.com/security')
+        request.urlconf = 'regressiontests.middleware.cve_2018_14574_urls'
+        r = CommonMiddleware().process_request(request)
+        self.assertEqual(r.status_code, 301)
+        self.assertEqual(r['Location'], 'http://testserver/%2Fevil.com/security/')
 
     def test_prepend_www(self):
         settings.PREPEND_WWW = True

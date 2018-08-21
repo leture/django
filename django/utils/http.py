@@ -326,3 +326,14 @@ def _is_safe_url(url, host):
         return False
     return (not url_info[1] or url_info[1] == host) and \
         (not url_info[0] or url_info[0] in ['http', 'https'])
+
+
+def escape_leading_slashes(url):
+    """
+    If redirecting to an absolute path (two leading slashes), a slash must be
+    escaped to prevent browsers from handling the path as schemaless and
+    redirecting to another host.
+    """
+    if url.startswith('//'):
+        url = '/%2F{}'.format(url[2:])
+    return url

@@ -4,7 +4,7 @@ import re
 from django.conf import settings
 from django import http
 from django.core.mail import mail_managers
-from django.utils.http import urlquote
+from django.utils.http import escape_leading_slashes, urlquote
 from django.core import urlresolvers
 from django.utils.log import getLogger
 
@@ -60,12 +60,16 @@ class CommonMiddleware(object):
                 not old_url[0].startswith('www.')):
             new_url[0] = 'www.' + old_url[0]
 
+        do_escape_leading_slashes = False
+
         # Append a slash if APPEND_SLASH is set and the URL doesn't have a
         # trailing slash and there is no pattern for the current path
         if settings.APPEND_SLASH and (not old_url[1].endswith('/')):
             urlconf = getattr(request, 'urlconf', None)
             if (not urlresolvers.is_valid_path(request.path_info, urlconf) and
                     urlresolvers.is_valid_path("%s/" % request.path_info, urlconf)):
+                do_escape_leading_slashes = True
+
                 new_url[1] = new_url[1] + '/'
                 if settings.DEBUG and request.method == 'POST':
                     raise RuntimeError((""
@@ -79,12 +83,17 @@ class CommonMiddleware(object):
         if new_url == old_url:
             # No redirects required.
             return
+
+        new_url[1] = urlquote(new_url[1])
+        if do_escape_leading_slashes:
+            new_url[1] = escape_leading_slashes(new_url[1])
+
         if new_url[0]:
             newurl = "%s://%s%s" % (
                 request.is_secure() and 'https' or 'http',
-                new_url[0], urlquote(new_url[1]))
+                new_url[0], new_url[1])
         else:
-            newurl = urlquote(new_url[1])
+            newurl = new_url[1]
         if request.META.get('QUERY_STRING', ''):
             newurl += '?' + request.META['QUERY_STRING']
         return http.HttpResponsePermanentRedirect(newurl)
