@@ -1,5 +1,6 @@
 from django import http
 from django.template import Context, Engine, TemplateDoesNotExist, loader
+from django.utils.http import urlquote
 from django.views.decorators.csrf import requires_csrf_token
 
 
@@ -14,9 +15,10 @@ def page_not_found(request, template_name='404.html'):
     Templates: :template:`404.html`
     Context:
         request_path
-            The path of the requested URL (e.g., '/app/pages/bad_page/')
+            The path of the requested URL (e.g., '/app/pages/bad_page/'). It's
+            quoted to prevent a content injection attack.
     """
-    context = {'request_path': request.path}
+    context = {'request_path': urlquote(request.path)}
     try:
         template = loader.get_template(template_name)
         body = template.render(context, request)
@@ -24,7 +26,7 @@ def page_not_found(request, template_name='404.html'):
     except TemplateDoesNotExist:
         template = Engine().from_string(
             '<h1>Not Found</h1>'
-            '<p>The requested URL {{ request_path }} was not found on this server.</p>')
+            '<p>The requested resource was not found on this server.</p>')
         body = template.render(Context(context))
         content_type = 'text/html'
     return http.HttpResponseNotFound(body, content_type=content_type)
