@@ -1,6 +1,7 @@
 from django import http
 from django.template import (Context, RequestContext,
                              loader, TemplateDoesNotExist)
+from django.utils.http import urlquote
 from django.views.decorators.csrf import requires_csrf_token
 
 
@@ -15,10 +16,11 @@ def page_not_found(request, template_name='404.html'):
     Templates: `404.html`
     Context:
         request_path
-            The path of the requested URL (e.g., '/app/pages/bad_page/')
+            The path of the requested URL (e.g., '/app/pages/bad_page/'). It's
+            quoted to prevent a content injection attack.
     """
     t = loader.get_template(template_name) # You need to create a 404.html template.
-    return http.HttpResponseNotFound(t.render(RequestContext(request, {'request_path': request.path})))
+    return http.HttpResponseNotFound(t.render(RequestContext(request, {'request_path': urlquote(request.path)})))
 
 
 @requires_csrf_token
