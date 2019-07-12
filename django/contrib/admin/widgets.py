@@ -7,7 +7,9 @@ import copy
 
 from django import forms
 from django.contrib.admin.templatetags.admin_static import static
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import URLValidator
 from django.db.models.deletion import CASCADE
 from django.forms.utils import flatatt
 from django.forms.widgets import Media, RadioFieldRenderer
@@ -351,22 +353,31 @@ class AdminEmailInputWidget(forms.EmailInput):
 
 
 class AdminURLFieldWidget(forms.URLInput):
-    def __init__(self, attrs=None):
+    def __init__(self, attrs=None, validator_class=URLValidator):
         final_attrs = {'class': 'vURLField'}
         if attrs is not None:
             final_attrs.update(attrs)
         super(AdminURLFieldWidget, self).__init__(attrs=final_attrs)
+        self.validator = validator_class()
 
     def render(self, name, value, attrs=None):
         html = super(AdminURLFieldWidget, self).render(name, value, attrs)
+
         if value:
-            value = force_text(self._format_value(value))
-            final_attrs = {'href': smart_urlquote(value)}
-            html = format_html(
-                '<p class="url">{} <a{}>{}</a><br />{} {}</p>',
-                _('Currently:'), flatatt(final_attrs), value,
-                _('Change:'), html
-            )
+            try:
+                self.validator(value)
+                url_valid = True
+            except ValidationError:
+                url_valid = False
+
+            if url_valid:
+                value = force_text(self._format_value(value))
+                final_attrs = {'href': smart_urlquote(value)}
+                html = format_html(
+                    '<p class="url">{} <a{}>{}</a><br />{} {}</p>',
+                    _('Currently:'), flatatt(final_attrs), value,
+                    _('Change:'), html
+                )
         return html
 
 
