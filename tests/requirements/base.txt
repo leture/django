@@ -5,7 +5,7 @@ jinja2 >= 2.7
 mock
 numpy < 1.12
 Pillow
-PyYAML
+PyYAML < 4
 pytz > dev
 selenium
 sqlparse
