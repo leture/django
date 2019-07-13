@@ -1,10 +1,10 @@
 docutils
-Markdown
+Markdown < 3
 numpy < 1.9
-PIL
+Pillow
 py-bcrypt
 python-memcached
 pytz
-PyYAML
+PyYAML < 4
 selenium
-Textile
+Textile < 2.3
