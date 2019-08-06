@@ -283,7 +283,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self.connection.create_function("django_format_dtdelta", 5, _sqlite_format_dtdelta)
         connection_created.send(sender=self.__class__, connection=self)
 
-    def _cursor(self):
+    def _cursor(self, no_specific_database=False):
         if self.connection is None:
             self._sqlite_create_connection()
         return self.connection.cursor(factory=SQLiteCursorWrapper)

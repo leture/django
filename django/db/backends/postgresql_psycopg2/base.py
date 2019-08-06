@@ -154,15 +154,20 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return self._pg_version
     pg_version = property(_get_pg_version)
 
-    def _cursor(self):
+    def _cursor(self, no_specific_database=False):
         settings_dict = self.settings_dict
         if self.connection is None:
             if settings_dict['NAME'] == '':
                 from django.core.exceptions import ImproperlyConfigured
                 raise ImproperlyConfigured("You need to specify NAME in your Django settings file.")
-            conn_params = {
-                'database': settings_dict['NAME'],
-            }
+            if no_specific_database:
+                conn_params = {
+                    'database': 'postgres',
+                }
+            else:
+                conn_params = {
+                    'database': settings_dict['NAME'],
+                }
             conn_params.update(settings_dict['OPTIONS'])
             if 'autocommit' in conn_params:
                 del conn_params['autocommit']

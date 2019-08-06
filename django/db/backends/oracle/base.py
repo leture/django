@@ -469,7 +469,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         return "%s/%s@%s" % (settings_dict['USER'],
                              settings_dict['PASSWORD'], dsn)
 
-    def _cursor(self):
+    def _cursor(self, no_specific_database=False):
         cursor = None
         if not self._valid_connection():
             conn_string = convert_unicode(self._connect_string())

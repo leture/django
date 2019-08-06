@@ -310,13 +310,13 @@ class BaseDatabaseWrapper(object):
             self.connection.close()
             self.connection = None
 
-    def cursor(self):
+    def cursor(self, no_specific_database=False):
         self.validate_thread_sharing()
         if (self.use_debug_cursor or
             (self.use_debug_cursor is None and settings.DEBUG)):
-            cursor = self.make_debug_cursor(self._cursor())
+            cursor = self.make_debug_cursor(self._cursor(no_specific_database=no_specific_database))
         else:
-            cursor = util.CursorWrapper(self._cursor(), self)
+            cursor = util.CursorWrapper(self._cursor(no_specific_database=no_specific_database), self)
         return cursor
 
     def make_debug_cursor(self, cursor):

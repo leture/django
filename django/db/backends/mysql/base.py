@@ -358,7 +358,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
                 self.connection = None
         return False
 
-    def _cursor(self):
+    def _cursor(self, no_specific_database=False):
         new_connection = False
         if not self._valid_connection():
             new_connection = True

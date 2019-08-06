@@ -318,7 +318,7 @@ class BaseDatabaseCreation(object):
         # Create the test database and connect to it. We need to autocommit
         # if the database supports it because PostgreSQL doesn't allow
         # CREATE/DROP DATABASE statements within transactions.
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor(no_specific_database=True)
         self._prepare_for_test_db_ddl()
         try:
             cursor.execute(
@@ -385,7 +385,7 @@ class BaseDatabaseCreation(object):
         # ourselves. Connect to the previous database (not the test database)
         # to do so, because it's not allowed to delete a database while being
         # connected to it.
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor(no_specific_database=True)
         self._prepare_for_test_db_ddl()
         # Wait to avoid "database is being accessed by other users" errors.
         time.sleep(1)

@@ -1,0 +1,14 @@
+===========================
+Django 1.4.37 release notes
+===========================
+
+*August 06, 2019*
+
+Django 1.4.37 fixes one issue in 1.4.36.
+
+Simplier test database creation in PostgreSQL
+---------------------------------------------
+
+Allow the creation of test database in PostgreSQL without the need for existence
+of the default database by connecting to the by default existing postgres database
+for the connection which execute the create and drop database statements.
