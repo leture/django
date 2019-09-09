@@ -1,3 +1,6 @@
+import codecs
+import datetime
+import os
 import unittest
 
 from django.utils import html
@@ -46,15 +49,49 @@ class TestUtilsHtml(unittest.TestCase):
     def test_strip_tags(self):
         f = html.strip_tags
         items = (
-            ('<adf>a', 'a'),
-            ('</adf>a', 'a'),
-            ('<asdf><asdf>e', 'e'),
-            ('<f', '<f'),
-            ('</fe', '</fe'),
-            ('<x>b<y>', 'b'),
+            (u'<p>See: &#39;&eacute; is an apostrophe followed by e acute</p>',
+             u'See: &#39;&eacute; is an apostrophe followed by e acute'),
+            (u'<adf>a', u'a'),
+            (u'</adf>a', u'a'),
+            (u'<asdf><asdf>e', u'e'),
+            (u'hi, <f x', u'hi, <f x'),
+            (u'234<235, right?', u'234<235, right?'),
+            (u'a4<a5 right?', u'a4<a5 right?'),
+            (u'b7>b2!', u'b7>b2!'),
+            (u'</fe', u'</fe'),
+            (u'<x>b<y>', u'b'),
+            (u'a<p onclick="alert(\'<test>\')">b</p>c', u'abc'),
+            (u'a<p a >b</p>c', u'abc'),
+            (u'd<a:b c:d>e</p>f', u'def'),
+            (u'<strong>foo</strong><a href="http://example.com">bar</a>', u'foobar'),
+            # caused infinite loop on Pythons not patched with
+            # http://bugs.python.org/issue20288
+            (u'&gotcha&#;<>', u'&gotcha&#;<>'),
+            (u'><!' + (u'&' * 16000) + u'D', u'><!' + (u'&' * 16000) + u'D'),
+            (u'X<<<<br>br>br>br>X', u'XX'),
         )
         for value, output in items:
             self.check_output(f, value, output)
+
+        # Some convoluted syntax for which parsing may differ between python versions
+        output = html.strip_tags(u'<sc<!-- -->ript>test<<!-- -->/script>')
+        self.assertNotIn(u'<script>', output)
+        self.assertIn(u'test', output)
+        output = html.strip_tags(u'<script>alert()</script>&h')
+        self.assertNotIn(u'<script>', output)
+        self.assertIn(u'alert()', output)
+
+        # Test with more lengthy content (also catching performance regressions)
+        for filename in ('strip_tags1.html', 'strip_tags2.txt'):
+            path = os.path.join(os.path.dirname(__file__), 'files', filename)
+            with codecs.open(path, encoding='utf-8') as fp:
+                content = fp.read()
+                start = datetime.datetime.now()
+                stripped = html.strip_tags(content)
+                elapsed = datetime.datetime.now() - start
+            self.assertEqual(elapsed.seconds, 0)
+            self.assertIn(u"Please try again.", stripped)
+            self.assertNotIn(u'<', stripped)
 
     def test_strip_spaces_between_tags(self):
         f = html.strip_spaces_between_tags

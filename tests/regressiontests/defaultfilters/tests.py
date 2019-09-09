@@ -159,19 +159,20 @@ class DefaultFiltersTests(TestCase):
             'not a number'), u'A sentence with a few words in it')
 
     def test_truncatewords_html(self):
-        self.assertEqual(truncatewords_html(
-            u'<p>one <a href="#">two - three <br>four</a> five</p>', 0), u'')
-        self.assertEqual(truncatewords_html(u'<p>one <a href="#">two - '\
-            u'three <br>four</a> five</p>', 2),
+        self.assertEqual(
+            truncatewords_html(u'<p>one <a href="#">two - three <br>four</a> five</p>', 0),
+            u'')
+        self.assertEqual(
+            truncatewords_html(u'<p>one <a href="#">two - three <br>four</a> five</p>', 2),
             u'<p>one <a href="#">two ...</a></p>')
-        self.assertEqual(truncatewords_html(
-            u'<p>one <a href="#">two - three <br>four</a> five</p>', 4),
+        self.assertEqual(
+            truncatewords_html(u'<p>one <a href="#">two - three <br>four</a> five</p>', 4),
+            u'<p>one <a href="#">two - three ...</a></p>')
+        self.assertEqual(
+            truncatewords_html(u'<p>one <a href="#">two - three <br>four</a> five</p>', 5),
             u'<p>one <a href="#">two - three <br>four ...</a></p>')
-        self.assertEqual(truncatewords_html(
-            u'<p>one <a href="#">two - three <br>four</a> five</p>', 5),
-            u'<p>one <a href="#">two - three <br>four</a> five</p>')
-        self.assertEqual(truncatewords_html(
-            u'<p>one <a href="#">two - three <br>four</a> five</p>', 100),
+        self.assertEqual(
+            truncatewords_html(u'<p>one <a href="#">two - three <br>four</a> five</p>', 100),
             u'<p>one <a href="#">two - three <br>four</a> five</p>')
         self.assertEqual(truncatewords_html(
             u'\xc5ngstr\xf6m was here', 1), u'\xc5ngstr\xf6m ...')

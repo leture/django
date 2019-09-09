@@ -79,10 +79,20 @@ class TestUtilsText(unittest.TestCase):
         self.assertEqual(u'<br>The <hr/>quick <em>brown...</em>',
                          truncator.words(3, '...', html=True))
 
-        re_tag_catastrophic_test = (u'</a' + '\t' * 50000) + u'//>'
-        truncator = text.Truncator(re_tag_catastrophic_test)
+        # Test html entities
+        truncator = text.Truncator(u'<i>Buenos d&iacute;as! &#x00bf;C&oacute;mo est&aacute;?</i>')
+        self.assertEqual(u'<i>Buenos d&iacute;as! &#x00bf;C&oacute;mo...</i>', truncator.words(3, '...', html=True))
+        truncator = text.Truncator(u'<p>I &lt;3 python, what about you?</p>')
+        self.assertEqual(u'<p>I &lt;3 python,...</p>', truncator.words(3, '...', html=True))
 
-        self.assertEqual(re_tag_catastrophic_test, truncator.words(500, html=True))
+        perf_test_values = [
+            (u'</a' + u'\t' * 50000) + u'//>',
+            u'&' * 50000,
+            u'_X<<<<<<<<<<<>',
+        ]
+        for value in perf_test_values:
+            truncator = text.Truncator(value)
+            self.assertEqual(value, truncator.words(50, html=True))
 
     def test_old_truncate_words(self):
         self.assertEqual(u'The quick brown fox jumped over the lazy dog.',

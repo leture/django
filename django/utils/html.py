@@ -1,7 +1,7 @@
 """HTML utilities suitable for global use."""
 
 import re
-import string
+import sys
 import urllib
 import urlparse
 
@@ -9,6 +9,8 @@ from django.utils.safestring import SafeData, mark_safe
 from django.utils.encoding import smart_str, force_unicode
 from django.utils.functional import allow_lazy
 from django.utils.text import normalize_newlines
+
+from .html_parser import HTMLParseError, HTMLParser
 
 # Configuration for urlize() function.
 TRAILING_PUNCTUATION = ['.', ',', ':', ';']
@@ -80,10 +82,65 @@ def linebreaks(value, autoescape=False):
     return u'\n\n'.join(paras)
 linebreaks = allow_lazy(linebreaks, unicode)
 
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        # The strict parameter was added in Python 3.2 with a default of True.
+        # The default changed to False in Python 3.3 and was deprecated.
+        if sys.version_info[:2] == (3, 2):
+            HTMLParser.__init__(self, strict=False)
+        else:
+            HTMLParser.__init__(self)
+        self.reset()
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def handle_entityref(self, name):
+        self.fed.append('&%s;' % name)
+
+    def handle_charref(self, name):
+        self.fed.append('&#%s;' % name)
+
+    def get_data(self):
+        return ''.join(self.fed)
+
+
+def _strip_once(value):
+    """
+    Internal tag stripping utility used by strip_tags.
+    """
+    s = MLStripper()
+    try:
+        s.feed(value)
+    except HTMLParseError:
+        return value
+    try:
+        s.close()
+    except (HTMLParseError, UnboundLocalError):
+        # UnboundLocalError because of http://bugs.python.org/issue17802
+        # on Python 3.2, triggered by strict=False mode of HTMLParser
+        return s.get_data() + s.rawdata
+    else:
+        return s.get_data()
+
+
 def strip_tags(value):
     """Returns the given HTML with all tags stripped."""
-    return re.sub(r'<[^>]*?>', '', force_unicode(value))
+    # Note: in typical case this loop executes _strip_once once. Loop condition
+    # is redundant, but helps to reduce number of executions of _strip_once.
+    while '<' in value and '>' in value:
+        new_value = _strip_once(value)
+        if len(new_value) >= len(value) or value.count('<') == new_value.count('<'):
+            # _strip_once wasn't able to detect more tags, or line length increased.
+            # due to http://bugs.python.org/issue20288
+            # (affects Python 2 < 2.7.7 and Python 3 < 3.3.5)
+            break
+        value = new_value
+    return value
 strip_tags = allow_lazy(strip_tags)
+
 
 def strip_spaces_between_tags(value):
     """Returns the given HTML with spaces between tags removed."""

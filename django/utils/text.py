@@ -18,7 +18,7 @@ capfirst = lambda x: x and force_unicode(x)[0].upper() + force_unicode(x)[1:]
 capfirst = allow_lazy(capfirst, unicode)
 
 # Set up regular expressions
-re_words = re.compile(r'&.*?;|<.*?>|(\w[\w-]*)', re.U|re.S)
+re_words = re.compile(r'&.*?;|<[^>]+?>|([^<>\s]+)', re.S)
 re_tag = re.compile(r'<(/)?(\S+?)(?:(\s*/)|\s.*?)?>', re.S)
 
 
