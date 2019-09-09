@@ -182,8 +182,8 @@ def strip_tags(value):
     # is redundant, but helps to reduce number of executions of _strip_once.
     while '<' in value and '>' in value:
         new_value = _strip_once(value)
-        if len(new_value) >= len(value):
-            # _strip_once was not able to detect more tags or length increased
+        if len(new_value) >= len(value) or value.count('<') == new_value.count('<'):
+            # _strip_once wasn't able to detect more tags, or line length increased.
             # due to http://bugs.python.org/issue20288
             # (affects Python 2 < 2.7.7 and Python 3 < 3.3.5)
             break

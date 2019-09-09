@@ -4,8 +4,10 @@ from django.contrib.postgres import forms
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.postgres.validators import KeysValidator
 from django.core import exceptions, serializers
+from django.db import connection
 from django.forms import Form
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from .models import HStoreModel
 
@@ -126,6 +128,18 @@ class TestQuerying(TestCase):
         self.assertSequenceEqual(
             HStoreModel.objects.filter(id__in=HStoreModel.objects.filter(field__a='b')),
             self.objs[:2]
+        )
+
+    def test_key_sql_injection(self):
+        with CaptureQueriesContext(connection) as queries:
+            self.assertFalse(
+                HStoreModel.objects.filter(**{
+                    "field__test' = 'a') OR 1 = 1 OR ('d": 'x',
+                }).exists()
+            )
+        self.assertIn(
+            """."field" -> 'test'' = ''a'') OR 1 = 1 OR (''d') = 'x' """,
+            queries[0]['sql'],
         )
 
 

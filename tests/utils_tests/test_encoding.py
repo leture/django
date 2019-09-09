@@ -2,12 +2,13 @@
 from __future__ import unicode_literals
 
 import datetime
+import sys
 import unittest
 
 from django.utils import six
 from django.utils.encoding import (
     escape_uri_path, filepath_to_uri, force_bytes, force_text, iri_to_uri,
-    uri_to_iri,
+    repercent_broken_unicode, uri_to_iri,
 )
 from django.utils.http import urlquote_plus
 
@@ -41,6 +42,15 @@ class TestEncodingUtils(unittest.TestCase):
     def test_force_bytes_strings_only(self):
         today = datetime.date.today()
         self.assertEqual(force_bytes(today, strings_only=True), today)
+
+    def test_repercent_broken_unicode_recursion_error(self):
+        # Prepare a string long enough to force a recursion error if the tested
+        # function uses recursion.
+        data = b'\xfc' * sys.getrecursionlimit()
+        try:
+            self.assertEqual(repercent_broken_unicode(data), b'%FC' * sys.getrecursionlimit())
+        except RuntimeError:
+            self.fail('Unexpected RecursionError raised.')
 
     def test_escape_uri_path(self):
         self.assertEqual(
