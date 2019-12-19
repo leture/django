@@ -1,9 +1,12 @@
+import unicodedata
+
 from django import forms
 from django.forms.util import flatatt
 from django.template import loader
 from django.utils.encoding import smart_str
 from django.utils.http import int_to_base36
 from django.utils.safestring import mark_safe
+from django.utils.six import PY3
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django.contrib.auth import authenticate
@@ -15,6 +18,20 @@ from django.contrib.sites.models import get_current_site
 UNMASKED_DIGITS_TO_SHOW = 6
 
 mask_password = lambda p: "%s%s" % (p[:UNMASKED_DIGITS_TO_SHOW], "*" * max(len(p) - UNMASKED_DIGITS_TO_SHOW, 0))
+
+
+def _unicode_ci_compare(s1, s2):
+    """
+    Perform case-insensitive comparison of two identifiers, using the
+    recommended algorithm from Unicode Technical Report 36, section
+    2.11.2(B)(2).
+    """
+    normalized1 = unicodedata.normalize('NFKC', s1)
+    normalized2 = unicodedata.normalize('NFKC', s2)
+    if PY3:
+        return normalized1.casefold() == normalized2.casefold()
+    # lower() is the best alternative available on Python 2.
+    return normalized1.lower() == normalized2.lower()
 
 
 class ReadOnlyPasswordHashWidget(forms.Widget):
@@ -187,12 +204,6 @@ class AuthenticationForm(forms.Form):
 
 
 class PasswordResetForm(forms.Form):
-    error_messages = {
-        'unknown': _("That e-mail address doesn't have an associated "
-                     "user account. Are you sure you've registered?"),
-        'unusable': _("The user account associated with this e-mail "
-                      "address cannot reset the password."),
-    }
     email = forms.EmailField(label=_("E-mail"), max_length=75)
 
     def clean_email(self):
@@ -200,13 +211,10 @@ class PasswordResetForm(forms.Form):
         Validates that an active user exists with the given email address.
         """
         email = self.cleaned_data["email"]
-        self.users_cache = User.objects.filter(email__iexact=email,
-                                               is_active=True)
-        if not len(self.users_cache):
-            raise forms.ValidationError(self.error_messages['unknown'])
-        if any((user.password == UNUSABLE_PASSWORD)
-               for user in self.users_cache):
-            raise forms.ValidationError(self.error_messages['unusable'])
+        self.users_cache = [
+            u for u in User.objects.filter(email__iexact=email, is_active=True)
+            if u.password != UNUSABLE_PASSWORD and _unicode_ci_compare(email, getattr(u, 'email'))
+        ]
         return email
 
     def save(self, domain_override=None,

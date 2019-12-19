@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import with_statement
 import os
 from django.contrib.auth.models import User
@@ -8,6 +9,7 @@ from django.forms.fields import Field, EmailField
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils.encoding import force_unicode
+from django.utils import six
 from django.utils import translation
 from django.utils.translation import ugettext as _
 
@@ -261,6 +263,7 @@ UserChangeFormTest = override_settings(USE_TZ=False)(UserChangeFormTest)
 class PasswordResetFormTest(TestCase):
 
     fixtures = ['authtestdata.json']
+    urls = 'django.contrib.auth.tests.urls'
 
     def create_dummy_user(self):
         """creates a user and returns a tuple
@@ -278,13 +281,54 @@ class PasswordResetFormTest(TestCase):
         self.assertEqual(form['email'].errors,
                          [force_unicode(EmailField.default_error_messages['invalid'])])
 
+    def test_user_email_unicode_collision(self):
+        User.objects.create_user(u'mike123', u'mike@example.org', u'test123')
+        User.objects.create_user(u'mike456', u'mıke@example.org', u'test123')
+        data = {u'email': u'mıke@example.org'}
+        form = PasswordResetForm(data)
+        if six.PY2:
+            self.assertFalse(form.is_valid())
+        else:
+            self.assertTrue(form.is_valid())
+            form.save()
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].to, [u'mıke@example.org'])
+
+    def test_user_email_domain_unicode_collision(self):
+        User.objects.create_user(u'mike123', u'mike@ixample.org', u'test123')
+        User.objects.create_user(u'mike456', u'mike@ıxample.org', u'test123')
+        data = {u'email': u'mike@ıxample.org'}
+        form = PasswordResetForm(data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [u'mike@ıxample.org'])
+
+    def test_user_email_unicode_collision_nonexistent(self):
+        User.objects.create_user(u'mike123', u'mike@example.org', u'test123')
+        data = {u'email': u'mıke@example.org'}
+        form = PasswordResetForm(data)
+        if six.PY2:
+            self.assertFalse(form.is_valid())
+        else:
+            self.assertTrue(form.is_valid())
+            form.save()
+            self.assertEqual(len(mail.outbox), 0)
+
+    def test_user_email_domain_unicode_collision_nonexistent(self):
+        User.objects.create_user(u'mike123', u'mike@ixample.org', u'test123')
+        data = {u'email': u'mike@ıxample.org'}
+        form = PasswordResetForm(data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_nonexistant_email(self):
         # Test nonexistant email address
         data = {'email': 'foo@bar.com'}
         form = PasswordResetForm(data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(form.errors,
-                         {'email': [force_unicode(form.error_messages['unknown'])]})
+        self.assertTrue(form.is_valid())
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_cleaned_data(self):
         # Regression test
@@ -322,18 +366,7 @@ class PasswordResetFormTest(TestCase):
         user.is_active = False
         user.save()
         form = PasswordResetForm({'email': email})
-        self.assertFalse(form.is_valid())
-
-    def test_unusable_password(self):
-        user = User.objects.create_user('testuser', 'test@example.com', 'test')
-        data = {"email": "test@example.com"}
-        form = PasswordResetForm(data)
         self.assertTrue(form.is_valid())
-        user.set_unusable_password()
-        user.save()
-        form = PasswordResetForm(data)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(form["email"].errors,
-                         [_(u"The user account associated with this e-mail address cannot reset the password.")])
+        self.assertEqual(len(mail.outbox), 0)
 
 PasswordResetFormTest = override_settings(USE_TZ=False)(PasswordResetFormTest)
