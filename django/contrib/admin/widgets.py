@@ -19,6 +19,7 @@ from django.utils.encoding import force_text
 from django.utils.html import (
     escape, format_html, format_html_join, smart_urlquote,
 )
+from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
@@ -169,9 +170,10 @@ class ForeignKeyRawIdWidget(forms.TextInput):
 
             params = self.url_parameters()
             if params:
-                url = '?' + '&amp;'.join('%s=%s' % (k, v) for k, v in params.items())
+                url = u'?' + urlencode(params)
             else:
-                url = ''
+                url = u''
+            url = escape(url)
             if "class" not in attrs:
                 attrs['class'] = 'vForeignKeyRawIdAdminField'  # The JavaScript code looks for this hook.
             # TODO: "lookup_id_" is hard-coded here. This should instead use
