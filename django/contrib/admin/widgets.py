@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.forms.widgets import RadioFieldRenderer
 from django.forms.util import flatatt
 from django.utils.html import escape
+from django.utils.http import urlencode
 from django.utils.text import Truncator
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
@@ -148,9 +149,10 @@ class ForeignKeyRawIdWidget(forms.TextInput):
 
             params = self.url_parameters()
             if params:
-                url = u'?' + u'&amp;'.join([u'%s=%s' % (k, v) for k, v in params.items()])
+                url = u'?' + urlencode(params)
             else:
                 url = u''
+            url = escape(url)
             if "class" not in attrs:
                 attrs['class'] = 'vForeignKeyRawIdAdminField' # The JavaScript code looks for this hook.
             # TODO: "lookup_id_" is hard-coded here. This should instead use

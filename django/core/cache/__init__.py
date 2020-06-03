@@ -17,7 +17,8 @@ See docs/topics/cache.txt for information on the public API.
 from django.conf import settings
 from django.core import signals
 from django.core.cache.backends.base import (
-    InvalidCacheBackendError, CacheKeyWarning, BaseCache)
+    InvalidCacheBackendError, CacheKeyWarning, BaseCache, InvalidCacheKey,
+)
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import importlib
 
@@ -33,7 +34,7 @@ except ImportError:
         from cgi import parse_qsl
 
 __all__ = [
-    'get_cache', 'cache', 'DEFAULT_CACHE_ALIAS'
+    'get_cache', 'cache', 'DEFAULT_CACHE_ALIAS', 'InvalidCacheKey',
 ]
 
 # Name for use in settings file --> name of module in "backends" directory.

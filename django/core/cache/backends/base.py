@@ -12,6 +12,9 @@ class InvalidCacheBackendError(ImproperlyConfigured):
 class CacheKeyWarning(DjangoRuntimeWarning):
     pass
 
+class InvalidCacheKey(ValueError):
+    pass
+
 # Memcached does not accept keys longer than this.
 MEMCACHE_MAX_KEY_LENGTH = 250
 
@@ -191,15 +194,8 @@ class BaseCache(object):
         cache code.
 
         """
-        if len(key) > MEMCACHE_MAX_KEY_LENGTH:
-            warnings.warn('Cache key will cause errors if used with memcached: '
-                    '%s (longer than %s)' % (key, MEMCACHE_MAX_KEY_LENGTH),
-                    CacheKeyWarning)
-        for char in key:
-            if ord(char) < 33 or ord(char) == 127:
-                warnings.warn('Cache key contains characters that will cause '
-                        'errors if used with memcached: %r' % key,
-                              CacheKeyWarning)
+        for warning in memcache_key_warnings(key):
+            warnings.warn(warning, CacheKeyWarning)
 
     def incr_version(self, key, delta=1, version=None):
         """Adds delta to the cache version for the supplied key. Returns the
@@ -221,3 +217,17 @@ class BaseCache(object):
         the new version.
         """
         return self.incr_version(key, -delta, version)
+
+def memcache_key_warnings(key):
+    if len(key) > MEMCACHE_MAX_KEY_LENGTH:
+        yield (
+            'Cache key will cause errors if used with memcached: %r '
+            '(longer than %s)' % (key, MEMCACHE_MAX_KEY_LENGTH)
+        )
+    for char in key:
+        if ord(char) < 33 or ord(char) == 127:
+            yield (
+                'Cache key contains characters that will cause errors if '
+                'used with memcached: %r' % key, CacheKeyWarning
+            )
+            break
