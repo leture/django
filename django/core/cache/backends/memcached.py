@@ -3,7 +3,9 @@
 import pickle
 import time
 
-from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache
+from django.core.cache.backends.base import (
+    DEFAULT_TIMEOUT, BaseCache, InvalidCacheKey, memcache_key_warnings,
+)
 from django.utils import six
 from django.utils.deprecation import (
     RemovedInDjango19Warning, RenameMethodsBase,
@@ -77,10 +79,12 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
 
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         return self._cache.add(key, value, self.get_backend_timeout(timeout))
 
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         val = self._cache.get(key)
         if val is None:
             return default
@@ -88,16 +92,20 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
 
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         if not self._cache.set(key, value, self.get_backend_timeout(timeout)):
             # make sure the key doesn't keep its old value in case of failure to set (memcached's 1MB limit)
             self._cache.delete(key)
 
     def delete(self, key, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         self._cache.delete(key)
 
     def get_many(self, keys, version=None):
         new_keys = [self.make_key(x, version=version) for x in keys]
+        for key in new_keys:
+            self.validate_key(key)
         ret = self._cache.get_multi(new_keys)
         if ret:
             _ = {}
@@ -112,6 +120,7 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
 
     def incr(self, key, delta=1, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         # memcached doesn't support a negative delta
         if delta < 0:
             return self._cache.decr(key, -delta)
@@ -130,6 +139,7 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
 
     def decr(self, key, delta=1, version=None):
         key = self.make_key(key, version=version)
+        self.validate_key(key)
         # memcached doesn't support a negative delta
         if delta < 0:
             return self._cache.incr(key, -delta)
@@ -150,6 +160,7 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
         safe_data = {}
         for key, value in data.items():
             key = self.make_key(key, version=version)
+            self.validate_key(key)
             safe_data[key] = value
         self._cache.set_multi(safe_data, self.get_backend_timeout(timeout))
 
@@ -159,6 +170,10 @@ class BaseMemcachedCache(six.with_metaclass(BaseMemcachedCacheMethods, BaseCache
 
     def clear(self):
         self._cache.flush_all()
+
+    def validate_key(self, key):
+        for warning in memcache_key_warnings(key):
+            raise InvalidCacheKey(warning)
 
 
 class MemcachedCache(BaseMemcachedCache):

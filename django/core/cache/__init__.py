@@ -18,7 +18,8 @@ import warnings
 from django.conf import settings
 from django.core import signals
 from django.core.cache.backends.base import (
-    InvalidCacheBackendError, CacheKeyWarning, BaseCache)
+    InvalidCacheBackendError, CacheKeyWarning, BaseCache, InvalidCacheKey,
+)
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deprecation import RemovedInDjango19Warning
 from django.utils.module_loading import import_string
@@ -26,7 +27,7 @@ from django.utils.module_loading import import_string
 
 __all__ = [
     'get_cache', 'cache', 'DEFAULT_CACHE_ALIAS', 'InvalidCacheBackendError',
-    'CacheKeyWarning', 'BaseCache',
+    'CacheKeyWarning', 'BaseCache', 'InvalidCacheKey',
 ]
 
 DEFAULT_CACHE_ALIAS = 'default'

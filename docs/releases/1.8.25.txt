@@ -1,0 +1,17 @@
+===========================
+Django 1.8.25 release notes
+===========================
+
+*June 3, 2020*
+
+Django 1.8.25 fixes security issues in 1.18.24.
+
+CVE-2020-13254: Potential data leakage via malformed memcached keys
+===================================================================
+
+In cases where a memcached backend does not perform key validation, passing
+malformed cache keys could result in a key collision, and potential data
+leakage. In order to avoid this vulnerability, key validation is added to the
+memcached cache backends.
+
+Fix was backported from Django 2.2.13, https://github.com/django/django/commit/07e59caa02831c4569bbebb9eb773bdd9cb4b206
