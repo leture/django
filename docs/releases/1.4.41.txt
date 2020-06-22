@@ -1,0 +1,18 @@
+===========================
+Django 1.4.41 release notes
+===========================
+
+*June 23, 2020*
+
+Django 1.4.41 fixes one performance issue in 1.4.40.
+
+Super class media attribute access in media_property
+====================================================
+
+Avoid recursively computing the tree of media widgets more times
+than is necessary by not using hasattr to check for existence of
+media attribute which always triggers a reevaluation of the media
+property. This also involves other classes with media definitions
+like forms or admin classes.
+
+Fix was backported from git, https://github.com/django/django/commit/ede49c7ee03dd1519d0c375d953cb73e106837b6
