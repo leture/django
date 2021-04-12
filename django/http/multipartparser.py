@@ -6,6 +6,7 @@ file upload handlers for processing.
 """
 
 import cgi
+import os
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.utils.datastructures import MultiValueDict
@@ -168,7 +169,7 @@ class MultiPartParser(object):
                     if not file_name:
                         continue
                     file_name = force_unicode(file_name, encoding, errors='replace')
-                    file_name = self.IE_sanitize(unescape_entities(file_name))
+                    file_name = self.sanitize_file_name(unescape_entities(file_name))
 
                     content_type = meta_data.get('content-type', ('',))[0].strip()
                     try:
@@ -247,9 +248,13 @@ class MultiPartParser(object):
                                        file_obj)
                 break
 
-    def IE_sanitize(self, filename):
-        """Cleanup filename from Internet Explorer full paths."""
-        return filename and filename[filename.rfind("\\")+1:].strip()
+    def sanitize_file_name(self, file_name):
+        file_name = unescape_entities(file_name)
+        # Cleanup Windows-style path separators.
+        file_name = file_name[file_name.rfind('\\') + 1:].strip()
+        return os.path.basename(file_name)
+
+    IE_sanitize = sanitize_file_name
 
 class LazyStream(object):
     """

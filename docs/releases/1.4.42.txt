@@ -1,0 +1,17 @@
+===========================
+Django 1.4.42 release notes
+===========================
+
+*April 12, 2021*
+
+Django 1.4.42 fixes a security issue with severity "low" in 1.4.41.
+
+CVE-2021-28658: Potential directory-traversal via uploaded files
+================================================================
+
+``MultiPartParser`` allowed directory-traversal via uploaded files with
+suitably crafted file names.
+
+Built-in upload handlers were not affected by this vulnerability.
+
+Fix was backported from git, https://github.com/django/django/commit/4036d62bda0e9e9f6172943794b744a454ca49c2

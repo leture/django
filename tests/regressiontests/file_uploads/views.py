@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import hashlib
+import json
 import os
 
 from django.core.files.uploadedfile import UploadedFile
@@ -9,7 +10,9 @@ from django.utils import simplejson
 
 from .models import FileModel, UPLOAD_TO
 from .tests import UNICODE_FILENAME
-from .uploadhandler import QuotaUploadHandler, ErroringUploadHandler
+from .uploadhandler import (
+    ErroringUploadHandler, QuotaUploadHandler, TraversalUploadHandler,
+)
 
 
 def file_upload_view(request):
@@ -134,3 +137,13 @@ def file_upload_filename_case_view(request):
     obj = FileModel()
     obj.testfile.save(file.name, file)
     return HttpResponse('%d' % obj.pk)
+
+def file_upload_traversal_view(request):
+    request.upload_handlers.insert(0, TraversalUploadHandler())
+    request.FILES  # Trigger file parsing.
+
+    return HttpResponse(
+        json.dumps(
+            {'file_name': request.upload_handlers[0].file_name},
+        ),
+        content_type="application/json")
