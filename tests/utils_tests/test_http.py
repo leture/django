@@ -5,10 +5,12 @@ import sys
 import unittest
 from datetime import datetime
 
+from django.core.exceptions import TooManyFieldsSent
 from django.test import ignore_warnings
 from django.utils import http, six
 from django.utils.datastructures import MultiValueDict
 from django.utils.deprecation import RemovedInDjango21Warning
+from django.utils.http import limited_parse_qsl
 
 
 class TestUtilsHttp(unittest.TestCase):
@@ -258,3 +260,49 @@ class EscapeLeadingSlashesTests(unittest.TestCase):
         )
         for url, expected in tests:
             self.assertEqual(http.escape_leading_slashes(url), expected)
+
+
+# Backport of unit tests for urllib.parse.parse_qsl() from Python 3.8.8.
+# Copyright (C) 2021 Python Software Foundation (see LICENSE.python).
+class ParseQSLBackportTests(unittest.TestCase):
+    longMessage = True
+
+    def test_parse_qsl(self):
+        tests = [
+            ('', []),
+            ('&', []),
+            ('&&', []),
+            ('=', [('', '')]),
+            ('=a', [('', 'a')]),
+            ('a', [('a', '')]),
+            ('a=', [('a', '')]),
+            ('&a=b', [('a', 'b')]),
+            ('a=a+b&b=b+c', [('a', 'a b'), ('b', 'b c')]),
+            ('a=1&a=2', [('a', '1'), ('a', '2')]),
+            (';a=b', [(';a', 'b')]),
+            ('a=a+b;b=b+c', [('a', 'a b;b=b c')]),
+        ]
+        for original, expected in tests:
+            result = limited_parse_qsl(original, keep_blank_values=True)
+            self.assertEqual(result, expected, msg='Error parsing %r' % original)
+            expect_without_blanks = [v for v in expected if len(v[1])]
+            result = limited_parse_qsl(original, keep_blank_values=False)
+            self.assertEqual(result, expect_without_blanks, msg='Error parsing %r' % original)
+
+    @unittest.skipIf(six.PY2, 'Under Python 2 encoding is not supported anyway.')
+    def test_parse_qsl_encoding(self):
+        result = limited_parse_qsl('key=\u0141%E9', encoding='latin-1')
+        self.assertEqual(result, [('key', '\u0141\xE9')])
+        result = limited_parse_qsl('key=\u0141%C3%A9', encoding='utf-8')
+        self.assertEqual(result, [('key', '\u0141\xE9')])
+        result = limited_parse_qsl('key=\u0141%C3%A9', encoding='ascii')
+        self.assertEqual(result, [('key', '\u0141\ufffd\ufffd')])
+        result = limited_parse_qsl('key=\u0141%E9-', encoding='ascii')
+        self.assertEqual(result, [('key', '\u0141\ufffd-')])
+        result = limited_parse_qsl('key=\u0141%E9-', encoding='ascii', errors='ignore')
+        self.assertEqual(result, [('key', '\u0141-')])
+
+    def test_parse_qsl_field_limit(self):
+        with self.assertRaises(TooManyFieldsSent):
+            limited_parse_qsl('&'.join(['a=a'] * 11), fields_limit=10)
+        limited_parse_qsl('&'.join(['a=a'] * 10), fields_limit=10)

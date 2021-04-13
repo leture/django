@@ -56,7 +56,7 @@ ASCTIME_DATE = re.compile(r'^\w{3} %s %s %s %s$' % (__M, __D2, __T, __Y))
 RFC3986_GENDELIMS = str(":/?#[]@")
 RFC3986_SUBDELIMS = str("!$&'()*+,;=")
 
-FIELDS_MATCH = re.compile('[&;]')
+FIELDS_MATCH = re.compile('&')
 
 
 @keep_lazy_text
@@ -452,7 +452,7 @@ def limited_parse_qsl(qs, keep_blank_values=False, encoding='utf-8',
         if len(nv) != 2:
             # Handle case of a control-name with no equal sign
             if keep_blank_values:
-                nv.append('')
+                nv.append(str(''))
             else:
                 continue
         if len(nv[1]) or keep_blank_values:
