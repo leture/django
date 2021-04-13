@@ -8,7 +8,7 @@ import time
 import warnings
 
 from django.utils import six
-from django.utils.encoding import smart_bytes
+from django.utils.encoding import smart_bytes, force_text
 from django.utils.six.moves import http_cookies
 
 from pprint import pformat
@@ -123,8 +123,8 @@ from django.core.files import uploadhandler
 from django.http.multipartparser import MultiPartParser
 from django.http.utils import *
 from django.utils.datastructures import MultiValueDict, ImmutableList
-from django.utils.encoding import smart_str, iri_to_uri, force_unicode
-from django.utils.http import cookie_date
+from django.utils.encoding import smart_str, iri_to_uri
+from django.utils.http import cookie_date, limited_parse_qsl
 from django.utils import timezone
 
 RESERVED_CHARS="!*'();:@&=+$,/?%#[]"
@@ -433,9 +433,19 @@ class QueryDict(MultiValueDict):
         if not encoding:
             encoding = settings.DEFAULT_CHARSET
         self.encoding = encoding
-        for key, value in parse_qsl((query_string or ''), True): # keep_blank_values=True
-            self.appendlist(force_unicode(key, encoding, errors='replace'),
-                            force_unicode(value, encoding, errors='replace'))
+        query_string = query_string or u''
+        parse_qsl_kwargs = {
+            'keep_blank_values': True,
+            'fields_limit': settings.DATA_UPLOAD_MAX_NUMBER_FIELDS,
+            'encoding': encoding,
+        }
+        for key, value in limited_parse_qsl(query_string, **parse_qsl_kwargs):
+            try:
+                value = value.decode(encoding)
+            except UnicodeDecodeError:
+                value = value.decode('iso-8859-1')
+            self.appendlist(force_text(key, encoding, errors='replace'),
+                            value)
         self._mutable = mutable
 
     def _get_encoding(self):

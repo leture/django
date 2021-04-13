@@ -85,3 +85,9 @@ class ValidationError(Exception):
             error_dict[NON_FIELD_ERRORS] = self.messages
         return error_dict
 
+class TooManyFieldsSent(SuspiciousOperation):
+    """
+    The number of fields in a GET or POST request exceeded
+    settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.
+    """
+    pass

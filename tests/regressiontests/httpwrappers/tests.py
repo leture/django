@@ -180,9 +180,9 @@ class QueryDictTests(unittest.TestCase):
         QueryDicts must be able to handle invalid input encoding (in this
         case, bad UTF-8 encoding).
         """
-        q = QueryDict('foo=bar&foo=\xff')
-        self.assertEqual(q['foo'], u'\ufffd')
-        self.assertEqual(q.getlist('foo'), [u'bar', u'\ufffd'])
+        q = QueryDict(b'foo=bar&foo=\xff')
+        self.assertEqual(q[u'foo'], u'\xff')
+        self.assertEqual(q.getlist(u'foo'), [u'bar', u'\xff'])
 
     def test_pickle(self):
         q = QueryDict('')

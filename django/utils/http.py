@@ -7,6 +7,7 @@ import urlparse
 import unicodedata
 from email.utils import formatdate
 
+from django.core.exceptions import TooManyFieldsSent
 from django.utils import six
 from django.utils.datastructures import MultiValueDict
 from django.utils.encoding import smart_str, force_unicode
@@ -15,13 +16,13 @@ from django.utils.functional import allow_lazy
 if six.PY2:
     from urlparse import (
         ParseResult, SplitResult, _splitnetloc, _splitparams, scheme_chars,
-        uses_params,
+        uses_params, unquote
     )
     _coerce_args = None
 else:
     from urllib.parse import (
         ParseResult, SplitResult, _coerce_args, _splitnetloc, _splitparams,
-        scheme_chars, uses_params,
+        scheme_chars, uses_params, unquote
     )
 
 ETAG_MATCH = re.compile(r'(?:W/)?"((?:\\.|[^"])*)"')
@@ -36,6 +37,8 @@ __T = r'(?P<hour>\d{2}):(?P<min>\d{2}):(?P<sec>\d{2})'
 RFC1123_DATE = re.compile(r'^\w{3}, %s %s %s %s GMT$' % (__D, __M, __Y, __T))
 RFC850_DATE = re.compile(r'^\w{6,9}, %s-%s-%s %s GMT$' % (__D, __M, __Y2, __T))
 ASCTIME_DATE = re.compile(r'^\w{3} %s %s %s %s$' % (__M, __D2, __T, __Y))
+
+FIELDS_MATCH = re.compile('&')
 
 def urlquote(url, safe='/'):
     """
@@ -326,6 +329,57 @@ def _is_safe_url(url, host):
         return False
     return (not url_info[1] or url_info[1] == host) and \
         (not url_info[0] or url_info[0] in ['http', 'https'])
+
+
+def limited_parse_qsl(qs, keep_blank_values=False, encoding='utf-8',
+                      errors='replace', fields_limit=None):
+    """
+    Return a list of key/value tuples parsed from query string.
+
+    Copied from urlparse with an additional "fields_limit" argument.
+    Copyright (C) 2013 Python Software Foundation (see LICENSE.python).
+
+    Arguments:
+
+    qs: percent-encoded query string to be parsed
+
+    keep_blank_values: flag indicating whether blank values in
+        percent-encoded queries should be treated as blank strings. A
+        true value indicates that blanks should be retained as blank
+        strings. The default false value indicates that blank values
+        are to be ignored and treated as if they were  not included.
+
+    encoding and errors: specify how to decode percent-encoded sequences
+        into Unicode characters, as accepted by the bytes.decode() method.
+
+    fields_limit: maximum number of fields parsed or an exception
+        is raised. None means no limit and is the default.
+    """
+    if fields_limit:
+        pairs = FIELDS_MATCH.split(qs, fields_limit)
+        if len(pairs) > fields_limit:
+            raise TooManyFieldsSent(
+                'The number of GET/POST parameters exceeded '
+                'settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.'
+            )
+    else:
+        pairs = FIELDS_MATCH.split(qs)
+    r = []
+    for name_value in pairs:
+        if not name_value:
+            continue
+        nv = name_value.split('=', 1)
+        if len(nv) != 2:
+            # Handle case of a control-name with no equal sign
+            if keep_blank_values:
+                nv.append('')
+            else:
+                continue
+        if len(nv[1]) or keep_blank_values:
+            name = unquote(nv[0].replace(b'+', b' '))
+            value = unquote(nv[1].replace(b'+', b' '))
+            r.append((name, value))
+    return r
 
 
 def escape_leading_slashes(url):

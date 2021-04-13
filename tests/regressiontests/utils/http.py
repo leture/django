@@ -1,10 +1,11 @@
 import sys
 
+from django.core.exceptions import TooManyFieldsSent
 from django.utils import http
 from django.utils import unittest
 from django.utils.datastructures import MultiValueDict
-from django.http import HttpResponse, utils
-from django.test import RequestFactory
+from django.utils.http import limited_parse_qsl
+
 
 class TestUtilsHttp(unittest.TestCase):
 
@@ -135,3 +136,36 @@ class EscapeLeadingSlashesTests(unittest.TestCase):
         )
         for url, expected in tests:
             self.assertEqual(http.escape_leading_slashes(url), expected)
+
+
+# Backport of unit tests for urllib.parse.parse_qsl() from Python 3.8.8.
+# Copyright (C) 2021 Python Software Foundation (see LICENSE.python).
+class ParseQSLBackportTests(unittest.TestCase):
+    longMessage = True
+
+    def test_parse_qsl(self):
+        tests = [
+            ('', []),
+            ('&', []),
+            ('&&', []),
+            ('=', [('', '')]),
+            ('=a', [('', 'a')]),
+            ('a', [('a', '')]),
+            ('a=', [('a', '')]),
+            ('&a=b', [('a', 'b')]),
+            ('a=a+b&b=b+c', [('a', 'a b'), ('b', 'b c')]),
+            ('a=1&a=2', [('a', '1'), ('a', '2')]),
+            (';a=b', [(';a', 'b')]),
+            ('a=a+b;b=b+c', [('a', 'a b;b=b c')]),
+        ]
+        for original, expected in tests:
+            result = limited_parse_qsl(original, keep_blank_values=True)
+            self.assertEqual(result, expected, msg='Error parsing %r' % original)
+            expect_without_blanks = [v for v in expected if len(v[1])]
+            result = limited_parse_qsl(original, keep_blank_values=False)
+            self.assertEqual(result, expect_without_blanks, msg='Error parsing %r' % original)
+
+    def test_parse_qsl_field_limit(self):
+        with self.assertRaises(TooManyFieldsSent):
+            limited_parse_qsl('&'.join(['a=a'] * 11), fields_limit=10)
+        limited_parse_qsl('&'.join(['a=a'] * 10), fields_limit=10)

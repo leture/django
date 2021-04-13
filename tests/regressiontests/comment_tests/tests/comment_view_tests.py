@@ -265,7 +265,7 @@ class CommentViewTests(CommentTestCase):
         data["comment"] = "This is another comment"
         response = self.client.post("/post/", data)
         location = response["Location"]
-        broken_location = location + u"\ufffd"
+        broken_location = location + b"\ufffd"
         response = self.client.get(broken_location)
         self.assertEqual(response.status_code, 200)
 

@@ -4,7 +4,7 @@ Django 1.4.42 release notes
 
 *April 12, 2021*
 
-Django 1.4.42 fixes a security issue with severity "low" in 1.4.41.
+Django 1.4.42 fixes two security issues with severity "low" in 1.4.41.
 
 CVE-2021-28658: Potential directory-traversal via uploaded files
 ================================================================
@@ -15,3 +15,14 @@ suitably crafted file names.
 Built-in upload handlers were not affected by this vulnerability.
 
 Fix was backported from git, https://github.com/django/django/commit/4036d62bda0e9e9f6172943794b744a454ca49c2
+
+CVE-2021-23336: Web cache poisoning via ``django.utils.http.limited_parse_qsl()``
+=================================================================================
+
+Django contains a copy of :func:`urllib.parse.parse_qsl` which was added to
+backport some security fixes. A further security fix has been issued recently
+such that ``parse_qsl()`` no longer allows using ``;`` as a query parameter
+separator by default. Django now includes this fix. See :bpo:`42967` for
+further details.
+
+Fix was backported from git, https://github.com/django/django/commit/fd6b6afd5959b638c62dbf4839ccff97e7f7dfda
