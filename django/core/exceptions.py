@@ -53,6 +53,14 @@ class DisallowedRedirect(SuspiciousOperation):
     pass
 
 
+class TooManyFieldsSent(SuspiciousOperation):
+    """
+    The number of fields in a GET or POST request exceeded
+    settings.DATA_UPLOAD_MAX_NUMBER_FIELDS.
+    """
+    pass
+
+
 class PermissionDenied(Exception):
     """The user did not have permission to do that"""
     pass
