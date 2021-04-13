@@ -236,15 +236,6 @@ class BasicExtractorTests(ExtractorTests):
         self.assertIn("UnicodeDecodeError: skipped file not_utf8.txt in .",
                       force_text(out.getvalue()))
 
-    def test_extraction_warning(self):
-        """test xgettext warning about multiple bare interpolation placeholders"""
-        os.chdir(self.test_dir)
-        shutil.copyfile('./code.sample', './code_sample.py')
-        self.addCleanup(self.rmfile, os.path.join(self.test_dir, 'code_sample.py'))
-        out = StringIO()
-        management.call_command('makemessages', locale=[LOCALE], stdout=out)
-        self.assertIn("code_sample.py:4", force_text(out.getvalue()))
-
     def test_template_message_context_extractor(self):
         """
         Ensure that message contexts are correctly extracted for the
