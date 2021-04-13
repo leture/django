@@ -334,8 +334,9 @@ class ModelPaginationTests(TestCase):
             "object_list: <class 'pagination.models.Article'> QuerySet."
         ))
         # The warning points at the Paginator caller (i.e. the stacklevel
-        # is appropriate).
-        self.assertEqual(warning.filename, __file__)
+        # is appropriate). __file__ might be the pyc file instead of the
+        # py file.
+        self.assertTrue(__file__.startswith(warning.filename))
 
     def test_paginating_unordered_object_list_raises_warning(self):
         """
