@@ -222,13 +222,6 @@ class BasicExtractorTests(ExtractorTests):
         open(os.path.join(self.test_dir, 'vidéo.txt'), 'a').close()
         management.call_command('makemessages', locale=[LOCALE], verbosity=0)
 
-    def test_extraction_warning(self):
-        """test xgettext warning about multiple bare interpolation placeholders"""
-        shutil.copyfile('./code.sample', './code_sample.py')
-        out = StringIO()
-        management.call_command('makemessages', locale=[LOCALE], stdout=out)
-        self.assertIn("code_sample.py:4", force_text(out.getvalue()))
-
     def test_template_message_context_extractor(self):
         """
         Message contexts are correctly extracted for the {% trans %} and
