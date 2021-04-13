@@ -1,0 +1,17 @@
+===========================
+Django 1.8.26 release notes
+===========================
+
+*April 13, 2021*
+
+Django 1.8.26 fixes a security issue with severity "low" in 1.8.25.
+
+CVE-2021-28658: Potential directory-traversal via uploaded files
+================================================================
+
+``MultiPartParser`` allowed directory-traversal via uploaded files with
+suitably crafted file names.
+
+Built-in upload handlers were not affected by this vulnerability.
+
+Fix was backported from git, https://github.com/django/django/commit/6d61860b22875f358fac83d903dc629897934815

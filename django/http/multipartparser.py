@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 import base64
 import binascii
 import cgi
+import os
 import sys
 
 from django.conf import settings
@@ -183,7 +184,7 @@ class MultiPartParser(object):
                     file_name = disposition.get('filename')
                     if file_name:
                         file_name = force_text(file_name, encoding, errors='replace')
-                        file_name = self.IE_sanitize(unescape_entities(file_name))
+                        file_name = self.sanitize_file_name(unescape_entities(file_name))
                     if not file_name:
                         continue
 
@@ -275,9 +276,13 @@ class MultiPartParser(object):
                     file_obj)
                 break
 
-    def IE_sanitize(self, filename):
-        """Cleanup filename from Internet Explorer full paths."""
-        return filename and filename[filename.rfind("\\") + 1:].strip()
+    def sanitize_file_name(self, file_name):
+        file_name = unescape_entities(file_name)
+        # Cleanup Windows-style path separators.
+        file_name = file_name[file_name.rfind('\\') + 1:].strip()
+        return os.path.basename(file_name)
+
+    IE_sanitize = sanitize_file_name
 
     def _close_files(self):
         # Free up all file handles.
