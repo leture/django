@@ -441,8 +441,7 @@ class TestFixtures(TestCase):
         """
         Regression for #3615 - Ensure data with nonexistent child key references raises error
         """
-        with six.assertRaisesRegex(self, IntegrityError,
-                "Problem installing fixture"):
+        with self.assertRaisesMessage(IntegrityError, "Problem installing fixture"):
             management.call_command(
                 'loaddata',
                 'forward_ref_bad_data.json',
