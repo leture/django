@@ -1,0 +1,14 @@
+============================
+Django 1.11.30 release notes
+============================
+
+*July 14, 2021*
+
+Django 1.11.31 fixes a compatibility issue in 1.11.30.
+
+Support psycopg2 >= 2.8
+=======================
+
+Adjusted the PostgreSQL database backend to be usable with psycopg2 version >= 2.8.
+
+Fix was backported from git, https://github.com/django/django/commit/5efaf078f7609a8c95045bcfdab0ba256b5449bf

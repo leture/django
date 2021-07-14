@@ -114,7 +114,7 @@ class Command(BaseCommand):
         try:
             connection.check_constraints(table_names=table_names)
         except Exception as e:
-            e.args = ("Problem installing fixtures: %s" % e,)
+            e.args = ("Problem installing fixtures: %s" % force_text(e),)
             raise
 
         # If we found even one object in a fixture, we need to reset the

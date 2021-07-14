@@ -74,17 +74,33 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
         # As cursor.description does not return reliably the nullable property,
         # we have to query the information_schema (#7783)
         cursor.execute("""
-            SELECT column_name, is_nullable, column_default
-            FROM information_schema.columns
-            WHERE table_name = %s""", [table_name])
-        field_map = {line[0]: line[1:] for line in cursor.fetchall()}
+            SELECT
+                a.attname AS column_name,
+                NOT (a.attnotnull OR (t.typtype = 'd' AND t.typnotnull)) AS is_nullable,
+                pg_get_expr(ad.adbin, ad.adrelid) AS column_default
+            FROM pg_attribute a
+            LEFT JOIN pg_attrdef ad ON a.attrelid = ad.adrelid AND a.attnum = ad.adnum
+            JOIN pg_type t ON a.atttypid = t.oid
+            JOIN pg_class c ON a.attrelid = c.oid
+            JOIN pg_namespace n ON c.relnamespace = n.oid
+            WHERE c.relkind IN ('f', 'm', 'p', 'r', 'v')
+                AND c.relname = %s
+                AND n.nspname NOT IN ('pg_catalog', 'pg_toast')
+                AND pg_catalog.pg_table_is_visible(c.oid)
+        """, [table_name])
+        field_map = {force_text(line[0]): line[1:] for line in cursor.fetchall()}
         cursor.execute("SELECT * FROM %s LIMIT 1" % self.connection.ops.quote_name(table_name))
         return [
-            FieldInfo(*(
-                (force_text(line[0]),) +
-                line[1:6] +
-                (field_map[force_text(line[0])][0] == 'YES', field_map[force_text(line[0])][1])
-            )) for line in cursor.description
+            FieldInfo(
+                force_text(line.name),
+                line.type_code,
+                line.display_size,
+                line.internal_size,
+                line.precision,
+                line.scale,
+                *field_map[force_text(line.name)]
+            )
+            for line in cursor.description
         ]
 
     def get_relations(self, cursor, table_name):

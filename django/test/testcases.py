@@ -612,7 +612,7 @@ class SimpleTestCase(unittest.TestCase):
     def _assert_raises_message_cm(self, expected_exception, expected_message):
         with self.assertRaises(expected_exception) as cm:
             yield cm
-        self.assertIn(expected_message, str(cm.exception))
+        self.assertIn(expected_message, force_text(cm.exception))
 
     def assertRaisesMessage(self, expected_exception, expected_message, *args, **kwargs):
         """

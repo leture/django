@@ -812,7 +812,11 @@ class SkippingExtraTests(TestCase):
 class AssertRaisesMsgTest(SimpleTestCase):
 
     def test_assert_raises_message(self):
-        msg = "'Expected message' not found in 'Unexpected message'"
+        if six.PY3:
+            msg = "'Expected message' not found in 'Unexpected message'"
+        else:
+            msg = "u'Expected message' not found in u'Unexpected message'"
+
         # context manager form of assertRaisesMessage()
         with self.assertRaisesMessage(AssertionError, msg):
             with self.assertRaisesMessage(ValueError, "Expected message"):
