@@ -1,0 +1,14 @@
+===========================
+Django 1.8.28 release notes
+===========================
+
+*February 9, 2022*
+
+Django 1.8.28 fixes a compatibility issue in 1.8.27.
+
+Support Python 3.8
+==================
+
+Adjusted model meta class `ModelBase` to call `__new__` with `__classcell__` information.
+
+Fix was backported from git, https://github.com/django/django/pull/7653/files
