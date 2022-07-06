@@ -249,26 +249,6 @@ class InspectDBTestCase(TestCase):
             with connection.cursor() as c:
                 c.execute('DROP INDEX Findex')
 
-    @skipUnless(connection.vendor == 'sqlite',
-                "Only patched sqlite's DatabaseIntrospection.data_types_reverse for this test")
-    def test_custom_fields(self):
-        """
-        Introspection of columns with a custom field (#21090)
-        """
-        out = StringIO()
-        orig_data_types_reverse = connection.introspection.data_types_reverse
-        try:
-            connection.introspection.data_types_reverse = {
-                'text': 'myfields.TextField',
-                'bigint': 'BigIntegerField',
-            }
-            call_command('inspectdb', 'inspectdb_columntypes', stdout=out)
-            output = out.getvalue()
-            self.assertIn("text_field = myfields.TextField()", output)
-            self.assertIn("big_int_field = models.BigIntegerField()", output)
-        finally:
-            connection.introspection.data_types_reverse = orig_data_types_reverse
-
     def test_introspection_errors(self):
         """
         Introspection errors should not crash the command, and the error should
