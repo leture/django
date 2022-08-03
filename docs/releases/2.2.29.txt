@@ -2,9 +2,9 @@
 Django 2.2.29 release notes
 ===========================
 
-*July 6, 2022*
+*August 3, 2022*
 
-Django 2.2.29 fixes a security issue with severity "high" in 2.2.28.
+Django 2.2.29 fixes two security issues with severity "high" in 2.2.28.
 
 CVE-2022-34265: Potential SQL injection via ``Trunc(kind)`` and ``Extract(lookup_name)`` arguments
 ==================================================================================================
@@ -18,3 +18,14 @@ Applications that constrain the lookup name and kind choice to a known safe
 list are unaffected.
 
 Fix was backported from git, https://github.com/django/django/commit/a9010fe5555e6086a9d9ae50069579400ef0685e.
+
+
+CVE-2022-36359: Potential reflected file download vulnerability in ``FileResponse``
+===================================================================================
+
+An application may have been vulnerable to a reflected file download (RFD)
+attack that sets the Content-Disposition header of a
+:class:`~django.http.FileResponse` when the ``filename`` was derived from
+user-supplied input. The ``filename`` is now escaped to avoid this possibility.
+
+Fix was backported from git, https://github.com/django/django/commit/b3e4494d759202a3b6bf247fd34455bf13be5b80.
