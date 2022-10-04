@@ -4,7 +4,7 @@ Django 1.8.29 release notes
 
 *October 4, 2022*
 
-Django 1.8.29 fixes multiple security issues in 1.8.28.
+Django 1.8.29 fixes two security issues in 1.8.28.
 
 CVE-2021-31542: Potential directory-traversal via uploaded files
 ================================================================
