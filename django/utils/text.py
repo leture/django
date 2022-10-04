@@ -6,6 +6,7 @@ import warnings
 from gzip import GzipFile
 from io import BytesIO
 
+from django.core.exceptions import SuspiciousFileOperation
 from django.utils import six
 from django.utils.deprecation import RemovedInDjango19Warning
 from django.utils.encoding import force_text
@@ -231,7 +232,7 @@ class Truncator(SimpleLazyObject):
         return out
 
 
-def get_valid_filename(s):
+def get_valid_filename(name):
     """
     Returns the given string converted to a string that can be used for a clean
     filename. Specifically, leading and trailing spaces are removed; other
@@ -240,8 +241,11 @@ def get_valid_filename(s):
     >>> get_valid_filename("john's portrait in 2004.jpg")
     'johns_portrait_in_2004.jpg'
     """
-    s = force_text(s).strip().replace(' ', '_')
-    return re.sub(r'(?u)[^-\w.]', '', s)
+    s = force_text(name).strip().replace(u' ', u'_')
+    s = re.sub(r'(?u)[^-\w.]', '', s)
+    if s in {u'', u'.', u'..'}:
+        raise SuspiciousFileOperation("Could not derive file name from '%s'" % name)
+    return s
 get_valid_filename = allow_lazy(get_valid_filename, six.text_type)
 
 

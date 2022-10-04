@@ -68,8 +68,18 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
 
     def get_table_description(self, cursor, table_name):
         "Returns a description of the table, with the DB-API cursor.description interface."
-        return [FieldInfo(info['name'], info['type'], None, info['size'], None, None,
-                 info['null_ok']) for info in self._table_info(cursor, table_name)]
+        return [
+            FieldInfo(
+                info['name'],
+                info['type'],
+                None,
+                info['size'],
+                None,
+                None,
+                info['null_ok'],
+                None,
+            ) for info in self._table_info(cursor, table_name)
+        ]
 
     def column_name_converter(self, name):
         """

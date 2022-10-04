@@ -5,6 +5,7 @@ import json
 import warnings
 from unittest import skipUnless
 
+from django.core.exceptions import SuspiciousFileOperation
 from django.test import SimpleTestCase, ignore_warnings
 from django.test.utils import reset_warning_registry
 from django.utils import six, text
@@ -216,6 +217,14 @@ class TestUtilsText(SimpleTestCase):
     def test_get_valid_filename(self):
         filename = "^&'@{}[],$=!-#()%+~_123.txt"
         self.assertEqual(text.get_valid_filename(filename), "-_123.txt")
+        self.assertEqual(text.get_valid_filename(lazystr(filename)), "-_123.txt")
+        msg = "Could not derive file name from '???'"
+        with self.assertRaisesMessage(SuspiciousFileOperation, msg):
+            text.get_valid_filename('???')
+        # After sanitizing this would yield '..'.
+        msg = "Could not derive file name from '$.$.$'"
+        with self.assertRaisesMessage(SuspiciousFileOperation, msg):
+            text.get_valid_filename('$.$.$')
 
     def test_compress_sequence(self):
         data = [{'key': i} for i in range(10)]
