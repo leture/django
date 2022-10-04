@@ -1,0 +1,15 @@
+===========================
+Django 2.2.30 release notes
+===========================
+
+*October 4, 2022*
+
+Django 2.2.30 fixes one security issues with severity "medium" in 2.2.29.
+
+CVE-2022-41323: Potential denial-of-service vulnerability in internationalized URLs
+===================================================================================
+
+Internationalized URLs were subject to potential denial of service attack via
+the locale parameter.
+
+Fix was backported from git, https://github.com/django/django/commit/5b6b257fa7ec37ff27965358800c67e2dd11c924.
