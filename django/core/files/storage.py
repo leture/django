@@ -62,6 +62,8 @@ class Storage(object):
         available for new content to be written to.
         """
         dir_name, file_name = os.path.split(name)
+        if '..' in dir_name:
+            raise SuspiciousFileOperation("Detected path traversal attempt in '%s'" % dir_name)
         file_root, file_ext = os.path.splitext(file_name)
         # If the filename already exists, add an underscore and a random 7
         # character alphanumeric string (before the file extension, if one

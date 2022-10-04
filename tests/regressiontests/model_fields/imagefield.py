@@ -6,6 +6,7 @@ import shutil
 from django.core.files import File
 from django.core.files.images import ImageFile
 from django.test import TestCase
+from django.utils import text
 
 from .models import (Image, Person, PersonWithHeight, PersonWithHeightAndWidth,
     PersonDimensionsFirst, PersonTwoImages, TestImageFieldFile)
@@ -39,10 +40,10 @@ if Image:
             os.mkdir(temp_storage_dir)
 
             file_path1 = os.path.join(os.path.dirname(__file__), "4x8.png")
-            self.file1 = self.File(open(file_path1, 'rb'))
+            self.file1 = self.File(open(file_path1, 'rb'), name='4x8.png')
 
             file_path2 = os.path.join(os.path.dirname(__file__), "8x4.png")
-            self.file2 = self.File(open(file_path2, 'rb'))
+            self.file2 = self.File(open(file_path2, 'rb'), name='8x4.png')
 
         def tearDown(self):
             """

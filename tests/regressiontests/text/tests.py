@@ -1,12 +1,18 @@
 # coding: utf-8
 from __future__ import with_statement
 
+from django.core.exceptions import SuspiciousFileOperation
 from django.test import TestCase
 from django.utils.encoding import iri_to_uri
 from django.utils.http import (cookie_date, http_date,
     urlquote, urlquote_plus, urlunquote, urlunquote_plus)
-from django.utils.text import get_text_list, smart_split
+from django.utils.text import get_text_list, smart_split, get_valid_filename, force_unicode
 from django.utils.translation import override
+from django.utils import six
+from django.utils.functional import lazy
+
+
+lazystr = lazy(force_unicode, six.text_type)
 
 
 class TextTests(TestCase):
@@ -103,3 +109,15 @@ class TextTests(TestCase):
     def test_iri_to_uri_idempotent(self):
         self.assertEqual(iri_to_uri(iri_to_uri(u'red%09ros\xe9#red')),
             'red%09ros%C3%A9#red')
+
+    def test_get_valid_filename(self):
+        filename = "^&'@{}[],$=!-#()%+~_123.txt"
+        self.assertEqual(get_valid_filename(filename), "-_123.txt")
+        self.assertEqual(get_valid_filename(lazystr(filename)), "-_123.txt")
+        msg = "Could not derive file name from '???'"
+        with self.assertRaisesMessage(SuspiciousFileOperation, msg):
+            get_valid_filename('???')
+        # After sanitizing this would yield '..'.
+        msg = "Could not derive file name from '$.$.$'"
+        with self.assertRaisesMessage(SuspiciousFileOperation, msg):
+            get_valid_filename('$.$.$')

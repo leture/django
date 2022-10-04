@@ -11,6 +11,7 @@ except ImportError:
 from django.conf import settings
 from django.core.files.base import File
 from django.core.files import temp as tempfile
+from django.core.files.utils import validate_file_name
 from django.utils.encoding import smart_str
 
 __all__ = ('UploadedFile', 'TemporaryUploadedFile', 'InMemoryUploadedFile',
@@ -49,6 +50,8 @@ class UploadedFile(File):
             if len(name) > 255:
                 name, ext = os.path.splitext(name)
                 name = name[:255 - len(ext)] + ext
+
+            name = validate_file_name(name)
 
         self._name = name
 

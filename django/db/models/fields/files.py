@@ -6,6 +6,7 @@ from django.db.models.fields import Field
 from django.core.files.base import File
 from django.core.files.storage import default_storage
 from django.core.files.images import ImageFile
+from django.core.files.utils import validate_file_name
 from django.db.models import signals
 from django.utils.encoding import force_unicode, smart_str
 from django.utils.translation import ugettext_lazy as _
@@ -220,8 +221,6 @@ class FileField(Field):
 
         self.storage = storage or default_storage
         self.upload_to = upload_to
-        if callable(upload_to):
-            self.generate_filename = upload_to
 
         kwargs['max_length'] = kwargs.get('max_length', 100)
         super(FileField, self).__init__(verbose_name, name, **kwargs)
@@ -260,7 +259,14 @@ class FileField(Field):
         return os.path.normpath(self.storage.get_valid_name(os.path.basename(filename)))
 
     def generate_filename(self, instance, filename):
-        return os.path.join(self.get_directory_name(), self.get_filename(filename))
+        filename = validate_file_name(filename)
+
+        if callable(self.upload_to):
+            filename = self.upload_to(instance, filename)
+        else:
+            filename = os.path.join(self.get_directory_name(), self.get_filename(filename))
+
+        return filename
 
     def save_form_data(self, instance, data):
         # Important: None means "no change", other false value means "clear"

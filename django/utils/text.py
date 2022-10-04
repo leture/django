@@ -9,6 +9,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+from django.core.exceptions import SuspiciousFileOperation
 from django.utils.encoding import force_unicode
 from django.utils.functional import allow_lazy, SimpleLazyObject
 from django.utils.translation import ugettext_lazy, ugettext as _, pgettext
@@ -218,7 +219,7 @@ def truncate_html_words(s, num, end_text='...'):
     return Truncator(s).words(num, truncate=truncate, html=True)
 truncate_html_words = allow_lazy(truncate_html_words, unicode)
 
-def get_valid_filename(s):
+def get_valid_filename(name):
     """
     Returns the given string converted to a string that can be used for a clean
     filename. Specifically, leading and trailing spaces are removed; other
@@ -227,8 +228,11 @@ def get_valid_filename(s):
     >>> get_valid_filename("john's portrait in 2004.jpg")
     u'johns_portrait_in_2004.jpg'
     """
-    s = force_unicode(s).strip().replace(' ', '_')
-    return re.sub(r'(?u)[^-\w.]', '', s)
+    s = force_unicode(name).strip().replace(u' ', u'_')
+    s = re.sub(r'(?u)[^-\w.]', '', s)
+    if s in {u'', u'.', u'..'}:
+        raise SuspiciousFileOperation("Could not derive file name from '%s'" % name)
+    return s
 get_valid_filename = allow_lazy(get_valid_filename, unicode)
 
 def get_text_list(list_, last_word=ugettext_lazy(u'or')):

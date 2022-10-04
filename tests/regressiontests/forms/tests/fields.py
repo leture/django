@@ -578,8 +578,10 @@ class FieldsTests(SimpleTestCase):
         self.assertRaisesMessage(ValidationError, "[u'This field is required.']", f.clean, None)
         self.assertRaisesMessage(ValidationError, "[u'This field is required.']", f.clean, None, '')
         self.assertEqual('files/test2.pdf', f.clean(None, 'files/test2.pdf'))
-        self.assertRaisesMessage(ValidationError, "[u'No file was submitted. Check the encoding type on the form.']", f.clean, SimpleUploadedFile('', ''))
-        self.assertRaisesMessage(ValidationError, "[u'No file was submitted. Check the encoding type on the form.']", f.clean, SimpleUploadedFile('', ''), '')
+        file = SimpleUploadedFile(None, b'')
+        file._name = ''
+        self.assertRaisesMessage(ValidationError, "[u'No file was submitted. Check the encoding type on the form.']", f.clean, file)
+        self.assertRaisesMessage(ValidationError, "[u'No file was submitted. Check the encoding type on the form.']", f.clean, file, '')
         self.assertEqual('files/test3.pdf', f.clean(None, 'files/test3.pdf'))
         self.assertRaisesMessage(ValidationError, "[u'No file was submitted. Check the encoding type on the form.']", f.clean, 'some content that is not a file')
         self.assertRaisesMessage(ValidationError, "[u'The submitted file is empty.']", f.clean, SimpleUploadedFile('name', None))

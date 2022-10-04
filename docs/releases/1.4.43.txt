@@ -1,0 +1,19 @@
+===========================
+Django 1.4.43 release notes
+===========================
+
+*October 4, 2022*
+
+Django 1.4.43 fixes multiple security issues in 1.4.42.
+
+CVE-2021-31542: Potential directory-traversal via uploaded files
+================================================================
+
+``MultiPartParser``, ``UploadedFile``, and ``FieldFile`` allowed
+directory-traversal via uploaded files with suitably crafted file names.
+
+In order to mitigate this risk, stricter basename and path sanitation is now
+applied. Specifically, empty file names and paths with dot segments will be
+rejected.
+
+Fix was backported from git, https://github.com/django/django/commit/04ac1624bdc2fa737188401757cf95ced122d26d.
