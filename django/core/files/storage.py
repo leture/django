@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.core.files import locks, File
 from django.core.files.move import file_move_safe
+from django.core.files.utils import validate_file_name
 from django.utils.crypto import get_random_string
 from django.utils.encoding import force_unicode, filepath_to_uri
 from django.utils.functional import LazyObject
@@ -43,7 +44,8 @@ class Storage(object):
 
         name = self.get_available_name(name)
         name = self._save(name, content)
-
+        # Ensure that the name returned from the storage system is still valid.
+        validate_file_name(name, allow_relative_path=True)
         # Store filenames with forward slashes, even on Windows
         return force_unicode(name.replace('\\', '/'))
 
@@ -64,6 +66,7 @@ class Storage(object):
         dir_name, file_name = os.path.split(name)
         if '..' in dir_name:
             raise SuspiciousFileOperation("Detected path traversal attempt in '%s'" % dir_name)
+        validate_file_name(file_name)
         file_root, file_ext = os.path.splitext(file_name)
         # If the filename already exists, add an underscore and a random 7
         # character alphanumeric string (before the file extension, if one

@@ -245,7 +245,7 @@ class FileField(Field):
         file = super(FileField, self).pre_save(model_instance, add)
         if file and not file._committed:
             # Commit the file to storage prior to saving the model
-            file.save(file.name, file, save=False)
+            file.save(os.path.basename(file.name), file, save=False)
         return file
 
     def contribute_to_class(self, cls, name):
@@ -259,13 +259,11 @@ class FileField(Field):
         return os.path.normpath(self.storage.get_valid_name(os.path.basename(filename)))
 
     def generate_filename(self, instance, filename):
-        filename = validate_file_name(filename)
-
         if callable(self.upload_to):
             filename = self.upload_to(instance, filename)
         else:
             filename = os.path.join(self.get_directory_name(), self.get_filename(filename))
-
+        filename = validate_file_name(filename, allow_relative_path=True)
         return filename
 
     def save_form_data(self, instance, data):
