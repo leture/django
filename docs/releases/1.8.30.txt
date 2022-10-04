@@ -1,0 +1,14 @@
+===========================
+Django 1.8.30 release notes
+===========================
+
+*October 4, 2022*
+
+Django 1.8.30 fixes a regression in 1.8.29.
+
+Bugfixes
+========
+
+* Fixed a regression in Django 1.8.29 where saving ``FileField`` would raise a
+  ``SuspiciousFileOperation`` even when a custom
+  :attr:`~django.db.models.FileField.upload_to` returns a valid file path
