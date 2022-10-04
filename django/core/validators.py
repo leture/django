@@ -93,6 +93,7 @@ class URLValidator(RegexValidator):
         r'\Z', re.IGNORECASE)
     message = _('Enter a valid URL.')
     schemes = ['http', 'https', 'ftp', 'ftps']
+    unsafe_chars = frozenset('\t\r\n')
 
     def __init__(self, schemes=None, **kwargs):
         super(URLValidator, self).__init__(**kwargs)
@@ -101,6 +102,8 @@ class URLValidator(RegexValidator):
 
     def __call__(self, value):
         value = force_text(value)
+        if self.unsafe_chars.intersection(value):
+            raise ValidationError(self.message, code=self.code)
         # Check first if the scheme is valid
         scheme = value.split('://')[0].lower()
         if scheme not in self.schemes:
