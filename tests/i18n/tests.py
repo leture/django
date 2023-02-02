@@ -989,7 +989,14 @@ class MiscTests(TestCase):
         self.assertEqual([('de', 1.0)], p('de;q=0.'))
         self.assertEqual([('en', 1.0), ('*', 0.5)], p('en; q=1.0, * ; q=0.5'))
         self.assertEqual([], p(''))
-
+        self.assertEqual(
+            [('en-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x', 1.0)],
+            p('en' + '-x' * 20),
+        ),
+        self.assertEqual(
+            [('en', 1.0)] * 20,
+            p(', '.join(['en; q=1.0'] * 20)),
+        ),
         # Bad headers; should always return [].
         self.assertEqual([], p('en-gb;q=1.0000'))
         self.assertEqual([], p('en;q=0.1234'))
@@ -1005,6 +1012,10 @@ class MiscTests(TestCase):
         self.assertEqual([], p('12-345'))
         self.assertEqual([], p(''))
         self.assertEqual([], p('en; q=1,'))
+        # Invalid as language-range value too long.
+        self.assertEqual([], p('xxxxxxxx' + '-xxxxxxxx' * 500)),
+        # Header value too long, only parse up to limit.
+        self.assertEqual([('en', 1.0)] * 45, p(', '.join(['en; q=1.0'] * 500))),
 
     def test_parse_literal_http_header(self):
         """
