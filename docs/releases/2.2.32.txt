@@ -1,0 +1,19 @@
+===========================
+Django 2.2.32 release notes
+===========================
+
+*February 16, 2023*
+
+Django 2.2.32 fixes a security issue in 2.2.31.
+
+CVE-2023-24580: Potential denial-of-service vulnerability in file uploads
+=========================================================================
+
+Passing certain inputs to multipart forms could result in too many open files
+or memory exhaustion, and provided a potential vector for a denial-of-service
+attack.
+
+The number of files parts parsed is now limited via the new
+:setting:`DATA_UPLOAD_MAX_NUMBER_FILES` setting.
+
+Backported from https://github.com/django/django/commit/a665ed5179f5bbd3db95ce67286d0192eff041d8

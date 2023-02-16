@@ -9,9 +9,12 @@ from django.conf import settings
 from django.core import signing
 from django.core.exceptions import (
     DisallowedHost, ImproperlyConfigured, RequestDataTooBig,
+    TooManyFilesSent,
 )
 from django.core.files import uploadhandler
-from django.http.multipartparser import MultiPartParser, MultiPartParserError
+from django.http.multipartparser import (
+    MultiPartParser, MultiPartParserError,
+)
 from django.utils.datastructures import (
     CaseInsensitiveMapping, ImmutableList, MultiValueDict,
 )
@@ -313,7 +316,7 @@ class HttpRequest:
                 data = self
             try:
                 self._post, self._files = self.parse_file_upload(self.META, data)
-            except MultiPartParserError:
+            except (MultiPartParserError, TooManyFilesSent):
                 # An error occurred while parsing POST data. Since when
                 # formatting the error the request handler might access
                 # self.POST, set self._post and self._file to prevent
