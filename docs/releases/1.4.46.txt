@@ -1,0 +1,13 @@
+===========================
+Django 1.4.46 release notes
+===========================
+
+*March 16, 2023*
+
+Django 1.4.46 fixes a regression in 1.4.45.
+
+Bugfixes
+========
+
+* Fixed a regression in Django 1.4.44 where saving ``FileField`` would raise a
+  ``SuspiciousFileOperation`` when a ``..`` is only part of the file name
