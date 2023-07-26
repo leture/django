@@ -183,8 +183,8 @@ class RelatedFieldListFilter(FieldListFilter):
 
     def has_output(self):
         if (isinstance(self.field, ForeignObjectRel) and
-                self.field.field.null or hasattr(self.field, 'rel') and
-                self.field.null):
+                (self.field.field.null or isinstance(self.field.field, ManyToManyField)) or
+                hasattr(self.field, 'rel') and (self.field.null or isinstance(self.field, ManyToManyField))):
             extra = 1
         else:
             extra = 0
