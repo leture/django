@@ -1,0 +1,12 @@
+===========================
+Django 1.8.31 release notes
+===========================
+
+*July 26th, 2023*
+
+Django 1.8.32 fixes a bug in 1.8.31.
+
+Admin filter on many to many relation should be shown when at least one relatable objects exists
+================================================================================================
+
+Use same if condition in RelatedFieldListFilter.has_output() like in RelatedFieldListFilter.choices()
