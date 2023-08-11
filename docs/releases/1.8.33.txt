@@ -1,0 +1,12 @@
+===========================
+Django 1.8.33 release notes
+===========================
+
+*August 11th, 2023*
+
+Django 1.8.33 fixes a bug in 1.8.32.
+
+Avoid overexcessive JOIN usage in django.contrib.admin.options.ModelAdmin.get_search_results()
+================================================================================================
+
+Restructuring leads to better constructed SQL query.
