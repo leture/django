@@ -1,0 +1,12 @@
+===========================
+Django 2.2.34 release notes
+===========================
+
+*September 12th, 2023*
+
+Django 2.2.34 fixes a bug in 2.2.33.
+
+Fixed restoring attributes when pickling FileField and ImageField
+=================================================================
+
+Backported from https://github.com/django/django/commit/f600e3fad6e92d9fe1ad8b351dc8446415f24345
