@@ -1,0 +1,7 @@
+===========================
+Django 2.2.35 release notes
+===========================
+
+*May 15th, 2025*
+
+Django 2.2.35 adds support for psycopg 2.9+.
